@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 1. **Always keep this file up to date.** After any change to the project — adding files, modifying game logic, changing structure — update the relevant sections of this file before ending the conversation. No need for the user to ask.
 
-2. **Always commit and push changes to GitHub.** After completing any task that modifies the project, stage the relevant files, create a descriptive commit, and push to the remote. No need for the user to ask. Exception: confirm before any destructive git operations (force push, reset --hard, etc.).
+2. **Always commit and push changes to GitHub.** Whenever files in the repository are modified, or at the end of a session, stage the relevant files, create a descriptive commit, and push to the remote. No need for the user to ask. Exception: confirm before any destructive git operations (force push, reset --hard, etc.).
 
 ## Repository State
 
