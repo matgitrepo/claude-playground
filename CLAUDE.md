@@ -10,10 +10,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository State
 
-This repository contains a single-file browser game built in vanilla HTML/CSS/JS.
+This repository contains two single-file browser apps built in vanilla HTML/CSS/JS.
 
 ### Files
 - `index.html` — Tic Tac Toe game (self-contained, no build step required)
+- `shopping-agent.html` — EU Fashion Deal Finder (searches Zalando, ASOS, Vinted in parallel)
 - `.vscode/settings.json` — enables Claude Code terminal integration (`claudeCode.useTerminal: true`)
 
 ### Game: Tic Tac Toe (`index.html`)
@@ -23,5 +24,17 @@ This repository contains a single-file browser game built in vanilla HTML/CSS/JS
 - Highlights the winning cells on victory
 - Restart button resets the board without clearing the score
 
+### App: EU Fashion Deal Finder (`shopping-agent.html`)
+- Searches Zalando (new), ASOS (new), and Vinted (secondhand) in parallel
+- Filters results by size (XS–XXL and EU numeric 36–46)
+- Sorts all results by effective price (item price + shipping), ascending
+- Converts GBP (ASOS) and PLN (Vinted) to EUR using hardcoded rates
+- Shows source badge (Zalando/ASOS/Vinted) and condition badge (New/Used) on each card
+- Warning banner displayed if any source fails, rest of results still shown
+- API keys configured in the `CONFIG` block at the top of the `<script>` tag:
+  - `ZALANDO_CLIENT_ID` — from developers.zalando.com (free, requires approval)
+  - `RAPIDAPI_KEY` — from rapidapi.com (free tier: ~100 req/month)
+  - Vinted requires no key (unofficial API via allorigins.win CORS proxy)
+
 ### Running
-Open `index.html` directly in a browser — no server or build step needed.
+Open either file directly in a browser — no server or build step needed.
