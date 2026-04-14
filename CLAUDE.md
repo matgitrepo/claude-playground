@@ -8,23 +8,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 2. **Always commit and push changes to GitHub.** Whenever files in the repository are modified, or at the end of a session, stage the relevant files, create a descriptive commit, and push to the remote. No need for the user to ask. Exception: confirm before any destructive git operations (force push, reset --hard, etc.).
 
-## Repository State
+## Repository Structure
 
-This repository contains two single-file browser apps built in vanilla HTML/CSS/JS.
+Monorepo — each project lives in its own subfolder. New projects should get their own subfolder.
 
-### Files
-- `index.html` — Tic Tac Toe game (self-contained, no build step required)
-- `shopping-agent.html` — EU Fashion Deal Finder (searches Zalando, ASOS, Vinted in parallel)
-- `.vscode/settings.json` — enables Claude Code terminal integration (`claudeCode.useTerminal: true`)
+```
+claude-playground/
+├── tic-tac-toe/
+│   └── index.html
+├── shopping-agent/
+│   └── index.html
+└── .vscode/settings.json
+```
 
-### Game: Tic Tac Toe (`index.html`)
+### Project: Tic Tac Toe (`tic-tac-toe/index.html`)
 - Two-player (X and O), played in the browser
 - Dark-themed UI using CSS Grid for the 3x3 board
 - Tracks score across rounds (wins for X, wins for O, draws)
 - Highlights the winning cells on victory
 - Restart button resets the board without clearing the score
 
-### App: EU Fashion Deal Finder (`shopping-agent.html`)
+### Project: EU Fashion Deal Finder (`shopping-agent/index.html`)
 - Searches Zalando (new), ASOS (new), and Vinted (secondhand) in parallel
 - Filters results by size (XS–XXL and EU numeric 36–46)
 - Sorts all results by effective price (item price + shipping), ascending
@@ -37,4 +41,4 @@ This repository contains two single-file browser apps built in vanilla HTML/CSS/
   - Vinted requires no key (unofficial API via allorigins.win CORS proxy)
 
 ### Running
-Open either file directly in a browser — no server or build step needed.
+Open any project's `index.html` directly in a browser — no server or build step needed.
