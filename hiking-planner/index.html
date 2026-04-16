@@ -229,7 +229,7 @@
     </div>
 
     <div class="error" id="errorBox"></div>
-    <div class="spinner" id="spinner">Checking weather...</div>
+    <div class="spinner" id="spinner"><span id="spinnerText">Checking weather...</span></div>
 
     <div class="result" id="result">
       <div class="location-label" id="locationLabel"></div>
@@ -312,17 +312,25 @@
 
       try {
         // Step 1: Geocode city
-        const geo = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,
-          { headers: { "Accept-Language": "en" } }
-        ).then(r => r.json())
-
-        if (!geo.length) throw new Error(`City "${city}" not found`)
+        document.getElementById("spinnerText").textContent = "Finding city..."
+        let geoRes
+        try {
+          geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,
+            { headers: { "Accept-Language": "en" } }
+          )
+          if (!geoRes.ok) throw new Error(`Geocoding failed (${geoRes.status})`)
+        } catch (e) {
+          throw new Error(`Could not look up city — ${e.message}`)
+        }
+        const geo = await geoRes.json()
+        if (!geo.length) throw new Error(`City "${city}" not found. Try a different spelling.`)
 
         const { lat, lon, display_name } = geo[0]
         const shortName = display_name.split(",").slice(0, 2).join(",")
 
         // Step 2: Fetch tomorrow's weather from Open-Meteo
+        document.getElementById("spinnerText").textContent = "Fetching weather..."
         const tomorrow = getTomorrowDate()
         const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
           `?latitude=${lat}&longitude=${lon}` +
@@ -330,8 +338,17 @@
           `precipitation_probability_max,wind_speed_10m_max,cloud_cover_mean,weathercode` +
           `&timezone=auto&start_date=${tomorrow}&end_date=${tomorrow}`
 
-        const weather = await fetch(weatherUrl).then(r => r.json())
+        let weather
+        try {
+          const weatherRes = await fetch(weatherUrl)
+          if (!weatherRes.ok) throw new Error(`HTTP ${weatherRes.status}`)
+          weather = await weatherRes.json()
+        } catch (e) {
+          throw new Error(`Could not fetch weather data — ${e.message}`)
+        }
+
         const d = weather.daily
+        if (!d) throw new Error("Weather data unavailable for this location")
 
         const tempMax  = Math.round(d.temperature_2m_max[0])
         const tempMin  = Math.round(d.temperature_2m_min[0])
@@ -350,6 +367,7 @@
         document.getElementById("locationLabel").textContent = `Tomorrow in ${shortName}`
 
         // Step 4: Ask AI via Worker proxy
+        document.getElementById("spinnerText").textContent = "Asking AI..."
         const prompt = `Tomorrow's hiking weather forecast for ${shortName}:
 - Temperature: ${tempMin}°C to ${tempMax}°C
 - Rain probability: ${rainProb}%
@@ -361,27 +379,42 @@
 Evaluate if this is good for hiking. Respond with valid JSON only:
 {"verdict": "GREAT" | "SO-SO" | "STAY HOME", "explanation": "2-3 sentences for a hiker"}`
 
-        const aiResponse = await fetch(CONFIG.WORKER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content: "You are a concise hiking weather advisor. Always respond with valid JSON only, no markdown, no extra text."
-              },
-              { role: "user", content: prompt }
-            ],
-            max_tokens: 200,
-            temperature: 0.4
+        let aiResponse
+        try {
+          const aiRes = await fetch(CONFIG.WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a concise hiking weather advisor. Always respond with valid JSON only, no markdown, no extra text."
+                },
+                { role: "user", content: prompt }
+              ],
+              max_tokens: 200,
+              temperature: 0.4
+            })
           })
-        }).then(r => r.json())
+          if (!aiRes.ok) {
+            const text = await aiRes.text()
+            throw new Error(`Worker returned ${aiRes.status}: ${text}`)
+          }
+          aiResponse = await aiRes.json()
+        } catch (e) {
+          throw new Error(`AI request failed — ${e.message}`)
+        }
 
         const raw = aiResponse.choices?.[0]?.message?.content?.trim()
-        if (!raw) throw new Error("No response from AI")
+        if (!raw) throw new Error("No response from AI. Check your OpenAI API key.")
 
-        const parsed = JSON.parse(raw)
+        let parsed
+        try {
+          parsed = JSON.parse(raw)
+        } catch {
+          throw new Error(`Unexpected AI response: ${raw}`)
+        }
         renderVerdict(parsed.verdict, parsed.explanation)
 
       } catch (err) {
