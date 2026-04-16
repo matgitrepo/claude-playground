@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hiking Weather Planner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1a1f1a;
+      color: #e8ede8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #a8c5a0;
+    }
+
+    header p {
+      margin-top: 8px;
+      color: #7a9478;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #252b25;
+      border: 1px solid #2e362e;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: #1a1f1a;
+      border: 1px solid #3a453a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #e8ede8;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #6a9e62;
+    }
+
+    input[type="text"]::placeholder {
+      color: #4a5a4a;
+    }
+
+    button#checkBtn {
+      background: #5a8f52;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    button#checkBtn:hover { background: #6aac60; }
+    button#checkBtn:disabled { background: #3a5a36; cursor: not-allowed; }
+
+    .error {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: #2e1a1a;
+      border: 1px solid #5a2a2a;
+      border-radius: 10px;
+      color: #e88080;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .spinner {
+      display: none;
+      margin-top: 24px;
+      text-align: center;
+      color: #7a9478;
+      font-size: 0.9rem;
+    }
+
+    .spinner::before {
+      content: "";
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #3a553a;
+      border-top-color: #6aac60;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .verdict {
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .verdict.great {
+      background: #1a2e1a;
+      border: 1px solid #3a6e32;
+    }
+
+    .verdict.soso {
+      background: #2a2410;
+      border: 1px solid #6e5a20;
+    }
+
+    .verdict.stayhome {
+      background: #2a1a1a;
+      border: 1px solid #6e2a2a;
+    }
+
+    .verdict-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    .verdict-label {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .verdict.great .verdict-label { color: #7ada6a; }
+    .verdict.soso .verdict-label { color: #dab86a; }
+    .verdict.stayhome .verdict-label { color: #da6a6a; }
+
+    .explanation {
+      margin-top: 12px;
+      font-size: 0.92rem;
+      color: #b0c4b0;
+      line-height: 1.6;
+    }
+
+    .weather-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .weather-stat {
+      background: #1a1f1a;
+      border: 1px solid #2e362e;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .weather-stat .label {
+      font-size: 0.75rem;
+      color: #5a7a5a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .weather-stat .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #c8dcc8;
+    }
+
+    .location-label {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #5a7a5a;
+      margin-bottom: 16px;
+    }
+
+    .config-notice {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #1a1f2e;
+      border: 1px solid #2a2a5a;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #8888cc;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Should I go hiking?</h1>
+    <p>Enter your city and we'll check tomorrow's weather for you</p>
+  </header>
+
+  <div class="card">
+    <div class="input-row">
+      <input type="text" id="cityInput" placeholder="e.g. Kraków, Warsaw, London" />
+      <button id="checkBtn" onclick="checkWeather()">Check</button>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+    <div class="spinner" id="spinner">Checking weather...</div>
+
+    <div class="result" id="result">
+      <div class="location-label" id="locationLabel"></div>
+
+      <div class="verdict" id="verdict">
+        <div class="verdict-icon" id="verdictIcon"></div>
+        <div class="verdict-label" id="verdictLabel"></div>
+        <div class="explanation" id="explanation"></div>
+      </div>
+
+      <div class="weather-grid">
+        <div class="weather-stat">
+          <div class="label">Temperature</div>
+          <div class="value" id="statTemp">—</div>
+        </div>
+        <div class="weather-stat">
+          <div class="label">Rain chance</div>
+          <div class="value" id="statRain">—</div>
+        </div>
+        <div class="weather-stat">
+          <div class="label">Wind speed</div>
+          <div class="value" id="statWind">—</div>
+        </div>
+        <div class="weather-stat">
+          <div class="label">Cloud cover</div>
+          <div class="value" id="statCloud">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-notice" id="configNotice">
+      Worker URL not configured. Open index.html and update <code>CONFIG.WORKER_URL</code>.
+    </div>
+  </div>
+
+  <script>
+    // ─── CONFIG ──────────────────────────────────────────────────────────────
+    const CONFIG = {
+      WORKER_URL: "https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev"
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const WMO_CODES = {
+      0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+      45: "Fog", 48: "Icy fog",
+      51: "Light drizzle", 53: "Drizzle", 55: "Heavy drizzle",
+      61: "Light rain", 63: "Rain", 65: "Heavy rain",
+      71: "Light snow", 73: "Snow", 75: "Heavy snow",
+      80: "Rain showers", 81: "Heavy showers", 82: "Violent showers",
+      95: "Thunderstorm", 96: "Thunderstorm + hail", 99: "Thunderstorm + hail"
+    }
+
+    document.getElementById("cityInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") checkWeather()
+    })
+
+    function showError(msg) {
+      const box = document.getElementById("errorBox")
+      box.textContent = msg
+      box.style.display = "block"
+    }
+
+    function clearError() {
+      document.getElementById("errorBox").style.display = "none"
+    }
+
+    async function checkWeather() {
+      const city = document.getElementById("cityInput").value.trim()
+      if (!city) return
+
+      if (CONFIG.WORKER_URL.includes("YOUR_WORKER")) {
+        document.getElementById("configNotice").style.display = "block"
+        return
+      }
+
+      clearError()
+      document.getElementById("result").style.display = "none"
+      document.getElementById("spinner").style.display = "block"
+      document.getElementById("checkBtn").disabled = true
+
+      try {
+        // Step 1: Geocode city
+        const geo = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,
+          { headers: { "Accept-Language": "en" } }
+        ).then(r => r.json())
+
+        if (!geo.length) throw new Error(`City "${city}" not found`)
+
+        const { lat, lon, display_name } = geo[0]
+        const shortName = display_name.split(",").slice(0, 2).join(",")
+
+        // Step 2: Fetch tomorrow's weather from Open-Meteo
+        const tomorrow = getTomorrowDate()
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
+          `?latitude=${lat}&longitude=${lon}` +
+          `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,` +
+          `precipitation_probability_max,wind_speed_10m_max,cloud_cover_mean,weathercode` +
+          `&timezone=auto&start_date=${tomorrow}&end_date=${tomorrow}`
+
+        const weather = await fetch(weatherUrl).then(r => r.json())
+        const d = weather.daily
+
+        const tempMax  = Math.round(d.temperature_2m_max[0])
+        const tempMin  = Math.round(d.temperature_2m_min[0])
+        const rain     = d.precipitation_sum[0]
+        const rainProb = d.precipitation_probability_max[0]
+        const wind     = Math.round(d.wind_speed_10m_max[0])
+        const cloud    = Math.round(d.cloud_cover_mean[0])
+        const code     = d.weathercode[0]
+        const condition = WMO_CODES[code] || "Unknown"
+
+        // Step 3: Update weather stats UI
+        document.getElementById("statTemp").textContent  = `${tempMin}°C – ${tempMax}°C`
+        document.getElementById("statRain").textContent  = `${rainProb}% (${rain} mm)`
+        document.getElementById("statWind").textContent  = `${wind} km/h`
+        document.getElementById("statCloud").textContent = `${cloud}%`
+        document.getElementById("locationLabel").textContent = `Tomorrow in ${shortName}`
+
+        // Step 4: Ask AI via Worker proxy
+        const prompt = `Tomorrow's hiking weather forecast for ${shortName}:
+- Temperature: ${tempMin}°C to ${tempMax}°C
+- Rain probability: ${rainProb}%
+- Precipitation: ${rain} mm
+- Wind speed: ${wind} km/h
+- Cloud cover: ${cloud}%
+- Conditions: ${condition}
+
+Evaluate if this is good for hiking. Respond with valid JSON only:
+{"verdict": "GREAT" | "SO-SO" | "STAY HOME", "explanation": "2-3 sentences for a hiker"}`
+
+        const aiResponse = await fetch(CONFIG.WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: "You are a concise hiking weather advisor. Always respond with valid JSON only, no markdown, no extra text."
+              },
+              { role: "user", content: prompt }
+            ],
+            max_tokens: 200,
+            temperature: 0.4
+          })
+        }).then(r => r.json())
+
+        const raw = aiResponse.choices?.[0]?.message?.content?.trim()
+        if (!raw) throw new Error("No response from AI")
+
+        const parsed = JSON.parse(raw)
+        renderVerdict(parsed.verdict, parsed.explanation)
+
+      } catch (err) {
+        showError(err.message || "Something went wrong. Please try again.")
+      } finally {
+        document.getElementById("spinner").style.display = "none"
+        document.getElementById("checkBtn").disabled = false
+      }
+    }
+
+    function renderVerdict(verdict, explanation) {
+      const el = document.getElementById("verdict")
+      const icon = document.getElementById("verdictIcon")
+      const label = document.getElementById("verdictLabel")
+      const exp = document.getElementById("explanation")
+
+      el.className = "verdict"
+
+      if (verdict === "GREAT") {
+        el.classList.add("great")
+        icon.textContent = "⛰️"
+        label.textContent = "Great weather for hiking!"
+      } else if (verdict === "SO-SO") {
+        el.classList.add("soso")
+        icon.textContent = "🌥️"
+        label.textContent = "So-so — could go either way"
+      } else {
+        el.classList.add("stayhome")
+        icon.textContent = "🌧️"
+        label.textContent = "Better stay at home"
+      }
+
+      exp.textContent = explanation
+      document.getElementById("result").style.display = "block"
+    }
+
+    function getTomorrowDate() {
+      const d = new Date()
+      d.setDate(d.getDate() + 1)
+      return d.toISOString().split("T")[0]
+    }
+  </script>
+
+</body>
+</html>

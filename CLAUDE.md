@@ -18,6 +18,11 @@ claude-playground/
 │   └── index.html
 ├── shopping-agent/
 │   └── index.html
+├── hiking-planner/
+│   ├── index.html
+│   └── worker/
+│       ├── worker.js
+│       └── wrangler.toml
 └── .vscode/settings.json
 ```
 
@@ -40,5 +45,18 @@ claude-playground/
   - `RAPIDAPI_KEY` — from rapidapi.com (free tier: ~100 req/month)
   - Vinted requires no key (unofficial API via allorigins.win CORS proxy)
 
+### Project: Hiking Weather Planner (`hiking-planner/index.html`)
+- User enters a city; app fetches tomorrow's weather and AI evaluates hiking suitability
+- Three verdict states: **Great weather for hiking** / **So-so** / **Better stay at home**
+- Weather data: Open-Meteo API (free, no key) + Nominatim geocoding (free, no key)
+- AI evaluation: OpenAI GPT-4o-mini via a Cloudflare Worker proxy
+- API key is stored as a Cloudflare secret — never in the frontend code or GitHub
+- `CONFIG.WORKER_URL` in `index.html` must be updated to the deployed Worker URL
+- Worker deployment: see `hiking-planner/worker/` — uses Wrangler CLI
+  - `wrangler secret put OPENAI_API_KEY` — stores the key securely
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — whitelist your frontend's URL
+  - Cost protection: model locked to `gpt-4o-mini`, `max_tokens` capped at 300
+
 ### Running
 Open any project's `index.html` directly in a browser — no server or build step needed.
+The hiking planner requires the Cloudflare Worker to be deployed first (see above).
