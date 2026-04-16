@@ -33,14 +33,14 @@ export default {
     }
 
     if (!env.OPENAI_API_KEY) {
-      return jsonResponse({ error: "API key not configured" }, 500, origin)
+      return jsonResponse({ error: "API key not configured" }, 500, origin, env)
     }
 
     let body
     try {
       body = await request.json()
     } catch {
-      return jsonResponse({ error: "Invalid JSON" }, 400, origin)
+      return jsonResponse({ error: "Invalid JSON" }, 400, origin, env)
     }
 
     // Only allow the cheap model — prevents abuse if someone calls your worker directly
@@ -62,10 +62,10 @@ export default {
       })
 
       const data = await upstream.json()
-      return jsonResponse(data, upstream.status, origin)
+      return jsonResponse(data, upstream.status, origin, env)
 
     } catch (err) {
-      return jsonResponse({ error: "Upstream request failed" }, 502, origin)
+      return jsonResponse({ error: "Upstream request failed" }, 502, origin, env)
     }
   }
 }
@@ -76,12 +76,17 @@ function isAllowedOrigin(origin, env) {
   return allowed.includes(origin) || allowed.includes("*")
 }
 
-function jsonResponse(data, status, origin) {
+function getAllowHeader(origin, env) {
+  const allowed = (env.ALLOWED_ORIGIN || "").split(",").map(s => s.trim())
+  return allowed.includes("*") ? "*" : origin
+}
+
+function jsonResponse(data, status, origin, env) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": getAllowHeader(origin, env),
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     }
@@ -95,7 +100,7 @@ function corsResponse(body, status, origin, env) {
   return new Response(body, {
     status,
     headers: {
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": getAllowHeader(origin, env),
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     }
