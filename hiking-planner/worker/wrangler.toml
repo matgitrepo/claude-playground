@@ -6,7 +6,7 @@ compatibility_date = "2024-09-23"
 # Comma-separated list of allowed origins.
 # Add your GitHub Pages URL here once you have it.
 # For local testing, add "http://localhost" or use * (not recommended for production).
-ALLOWED_ORIGIN = "*"
+ALLOWED_ORIGIN = "https://matgitrepo.github.io"
 
 # OPENAI_API_KEY is stored as a secret — never put it here.
 # Set it by running: wrangler secret put OPENAI_API_KEY
