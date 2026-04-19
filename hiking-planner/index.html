@@ -437,7 +437,9 @@
         document.getElementById("trailsList").innerHTML = '<div class="trails-status">Searching for nearby trails...</div>'
         fetchTrails(lat, lon)
           .then(trails => renderTrails(trails))
-          .catch(() => { document.getElementById("trailsCard").style.display = "none" })
+          .catch(() => {
+            document.getElementById("trailsList").innerHTML = '<div class="trails-status">Trail data unavailable right now.</div>'
+          })
 
       } catch (err) {
         showError(err.message || "Something went wrong. Please try again.")
@@ -507,10 +509,10 @@ Evaluate if this is good for hiking. Respond with valid JSON only:
     }
 
     async function fetchTrails(lat, lon) {
-      const query = `[out:json][timeout:20];relation["route"="hiking"](around:25000,${lat},${lon});out 10 tags;`
+      const query = `[out:json][timeout:25];(relation["route"="hiking"](around:40000,${lat},${lon});relation["route"="foot"](around:40000,${lat},${lon}););out 10 tags;`
       const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 9000)
+      const timeout = setTimeout(() => controller.abort(), 15000)
       try {
         const res = await fetch(url, { signal: controller.signal })
         if (!res.ok) throw new Error(`Overpass ${res.status}`)
@@ -580,10 +582,9 @@ Evaluate if this is good for hiking. Respond with valid JSON only:
     }
 
     function renderTrails(trails) {
-      const card = document.getElementById("trailsCard")
       const list = document.getElementById("trailsList")
       if (!trails?.length) {
-        card.style.display = "none"
+        list.innerHTML = '<div class="trails-status">No mapped hiking routes found nearby.</div>'
         return
       }
       list.innerHTML = trails.map(t => `

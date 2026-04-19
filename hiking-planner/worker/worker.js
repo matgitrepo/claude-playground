@@ -43,6 +43,16 @@ export default {
       return jsonResponse({ error: "Invalid JSON" }, 400, origin, env)
     }
 
+    // Daily rate limit
+    const today = new Date().toISOString().split("T")[0]
+    const countStr = await env.RATE_LIMIT.get(`rate:${today}`)
+    const count = parseInt(countStr || "0", 10)
+    const limit = parseInt(env.DAILY_LIMIT || "200", 10)
+    if (count >= limit) {
+      return jsonResponse({ error: "Daily request limit reached. Try again tomorrow." }, 429, origin, env)
+    }
+    await env.RATE_LIMIT.put(`rate:${today}`, String(count + 1), { expirationTtl: 172800 })
+
     // Only allow the cheap model — prevents abuse if someone calls your worker directly
     if (body.model && body.model !== "gpt-4o-mini") {
       body.model = "gpt-4o-mini"
