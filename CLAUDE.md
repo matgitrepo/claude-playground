@@ -46,15 +46,17 @@ claude-playground/
   - Vinted requires no key (unofficial API via allorigins.win CORS proxy)
 
 ### Project: Hiking Weather Planner (`hiking-planner/index.html`)
-- User enters a city; app fetches tomorrow's weather and AI evaluates hiking suitability
-- Three verdict states: **Great weather for hiking** / **So-so** / **Better stay at home**
+- User enters a city; toggle between **Tomorrow** or **This Weekend** (Sat + Sun side-by-side)
+- Three verdict states per day: **Great weather for hiking** / **So-so** / **Better stay at home**
+- Nearby hiking trails fetched from Overpass API (background, non-blocking)
 - Weather data: Open-Meteo API (free, no key) + Nominatim geocoding (free, no key)
 - AI evaluation: OpenAI GPT-4o-mini via a Cloudflare Worker proxy
 - API key is stored as a Cloudflare secret — never in the frontend code or GitHub
-- `CONFIG.WORKER_URL` in `index.html` must be updated to the deployed Worker URL
+- Live on GitHub Pages: `https://matgitrepo.github.io/claude-playground/hiking-planner/`
+- `CONFIG.WORKER_URL` in `index.html` points to the deployed Cloudflare Worker
 - Worker deployment: see `hiking-planner/worker/` — uses Wrangler CLI
   - `wrangler secret put OPENAI_API_KEY` — stores the key securely
-  - `ALLOWED_ORIGIN` in `wrangler.toml` — whitelist your frontend's URL
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — locked to `https://matgitrepo.github.io`
   - Cost protection: model locked to `gpt-4o-mini`, `max_tokens` capped at 300
 
 ### Running
