@@ -20,7 +20,7 @@
 
     header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 24px;
     }
 
     header h1 {
@@ -34,6 +34,30 @@
       margin-top: 8px;
       color: #7a9478;
       font-size: 0.95rem;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .mode-btn {
+      background: #252b25;
+      border: 1px solid #2e362e;
+      border-radius: 20px;
+      padding: 8px 22px;
+      color: #7a9478;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #3a5a36;
+      border-color: #5a8f52;
+      color: #c8dcc8;
     }
 
     .card {
@@ -62,13 +86,8 @@
       transition: border-color 0.2s;
     }
 
-    input[type="text"]:focus {
-      border-color: #6a9e62;
-    }
-
-    input[type="text"]::placeholder {
-      color: #4a5a4a;
-    }
+    input[type="text"]:focus { border-color: #6a9e62; }
+    input[type="text"]::placeholder { color: #4a5a4a; }
 
     button#checkBtn {
       background: #5a8f52;
@@ -120,9 +139,49 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .result {
+    .config-notice {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #1a1f2e;
+      border: 1px solid #2a2a5a;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #8888cc;
       display: none;
-      margin-top: 24px;
+    }
+
+    /* ─── Results ──────────────────────────────────────────── */
+
+    .results-area {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+      margin-top: 4px;
+    }
+
+    .location-label {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #5a7a5a;
+      margin: 16px 0 12px;
+    }
+
+    .day-card {
+      background: #252b25;
+      border: 1px solid #2e362e;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 12px;
+    }
+
+    .day-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #7a9478;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+      text-align: center;
     }
 
     .verdict {
@@ -132,34 +191,15 @@
       margin-bottom: 16px;
     }
 
-    .verdict.great {
-      background: #1a2e1a;
-      border: 1px solid #3a6e32;
-    }
+    .verdict.great    { background: #1a2e1a; border: 1px solid #3a6e32; }
+    .verdict.soso     { background: #2a2410; border: 1px solid #6e5a20; }
+    .verdict.stayhome { background: #2a1a1a; border: 1px solid #6e2a2a; }
 
-    .verdict.soso {
-      background: #2a2410;
-      border: 1px solid #6e5a20;
-    }
+    .verdict-icon  { font-size: 2.5rem; margin-bottom: 8px; }
+    .verdict-label { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.5px; }
 
-    .verdict.stayhome {
-      background: #2a1a1a;
-      border: 1px solid #6e2a2a;
-    }
-
-    .verdict-icon {
-      font-size: 2.5rem;
-      margin-bottom: 8px;
-    }
-
-    .verdict-label {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .verdict.great .verdict-label { color: #7ada6a; }
-    .verdict.soso .verdict-label { color: #dab86a; }
+    .verdict.great .verdict-label    { color: #7ada6a; }
+    .verdict.soso .verdict-label     { color: #dab86a; }
     .verdict.stayhome .verdict-label { color: #da6a6a; }
 
     .explanation {
@@ -196,22 +236,42 @@
       color: #c8dcc8;
     }
 
-    .location-label {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #5a7a5a;
-      margin-bottom: 16px;
+    /* ─── Trails ───────────────────────────────────────────── */
+
+    .trails-card {
+      background: #252b25;
+      border: 1px solid #2e362e;
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 12px;
     }
 
-    .config-notice {
-      margin-top: 20px;
-      padding: 12px 16px;
-      background: #1a1f2e;
-      border: 1px solid #2a2a5a;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      color: #8888cc;
-      display: none;
+    .trails-header {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #7a9478;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .trail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 9px 0;
+      border-bottom: 1px solid #2e362e;
+      font-size: 0.88rem;
+    }
+
+    .trail-item:last-child { border-bottom: none; }
+    .trail-name { color: #c8dcc8; }
+    .trail-meta { color: #5a7a5a; font-size: 0.78rem; margin-left: 8px; white-space: nowrap; }
+
+    .trails-status {
+      color: #5a7a5a;
+      font-size: 0.88rem;
+      font-style: italic;
     }
   </style>
 </head>
@@ -219,58 +279,39 @@
 
   <header>
     <h1>Should I go hiking?</h1>
-    <p>Enter your city and we'll check tomorrow's weather for you</p>
+    <p>Enter your city and get a hiking forecast</p>
   </header>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btnTomorrow" onclick="setMode('tomorrow')">Tomorrow</button>
+    <button class="mode-btn" id="btnWeekend" onclick="setMode('weekend')">This Weekend</button>
+  </div>
 
   <div class="card">
     <div class="input-row">
       <input type="text" id="cityInput" placeholder="e.g. Kraków, Warsaw, London" />
       <button id="checkBtn" onclick="checkWeather()">Check</button>
     </div>
-
     <div class="error" id="errorBox"></div>
     <div class="spinner" id="spinner"><span id="spinnerText">Checking weather...</span></div>
-
-    <div class="result" id="result">
-      <div class="location-label" id="locationLabel"></div>
-
-      <div class="verdict" id="verdict">
-        <div class="verdict-icon" id="verdictIcon"></div>
-        <div class="verdict-label" id="verdictLabel"></div>
-        <div class="explanation" id="explanation"></div>
-      </div>
-
-      <div class="weather-grid">
-        <div class="weather-stat">
-          <div class="label">Temperature</div>
-          <div class="value" id="statTemp">—</div>
-        </div>
-        <div class="weather-stat">
-          <div class="label">Rain chance</div>
-          <div class="value" id="statRain">—</div>
-        </div>
-        <div class="weather-stat">
-          <div class="label">Wind speed</div>
-          <div class="value" id="statWind">—</div>
-        </div>
-        <div class="weather-stat">
-          <div class="label">Cloud cover</div>
-          <div class="value" id="statCloud">—</div>
-        </div>
-      </div>
-    </div>
-
     <div class="config-notice" id="configNotice">
       Worker URL not configured. Open index.html and update <code>CONFIG.WORKER_URL</code>.
     </div>
   </div>
 
+  <div class="results-area" id="resultsArea">
+    <div class="location-label" id="locationLabel"></div>
+    <div id="dayResults"></div>
+    <div class="trails-card" id="trailsCard" style="display:none">
+      <div class="trails-header">Nearby Hiking Trails</div>
+      <div id="trailsList"></div>
+    </div>
+  </div>
+
   <script>
-    // ─── CONFIG ──────────────────────────────────────────────────────────────
     const CONFIG = {
       WORKER_URL: "https://hiking-planner-proxy.claude-playground.workers.dev"
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     const WMO_CODES = {
       0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
@@ -280,6 +321,16 @@
       71: "Light snow", 73: "Snow", 75: "Heavy snow",
       80: "Rain showers", 81: "Heavy showers", 82: "Violent showers",
       95: "Thunderstorm", 96: "Thunderstorm + hail", 99: "Thunderstorm + hail"
+    }
+
+    let currentMode = 'tomorrow'
+
+    function setMode(mode) {
+      currentMode = mode
+      document.getElementById('btnTomorrow').classList.toggle('active', mode === 'tomorrow')
+      document.getElementById('btnWeekend').classList.toggle('active', mode === 'weekend')
+      document.getElementById('resultsArea').style.display = 'none'
+      clearError()
     }
 
     document.getElementById("cityInput").addEventListener("keydown", e => {
@@ -296,6 +347,28 @@
       document.getElementById("errorBox").style.display = "none"
     }
 
+    function getTomorrowDate() {
+      const d = new Date()
+      d.setDate(d.getDate() + 1)
+      return d.toISOString().split("T")[0]
+    }
+
+    function getWeekendDates() {
+      const today = new Date()
+      const day = today.getDay() // 0=Sun, 6=Sat
+      const daysUntilSat = day === 6 ? 0 : day === 0 ? 6 : 6 - day
+      const sat = new Date(today)
+      sat.setDate(today.getDate() + daysUntilSat)
+      const sun = new Date(sat)
+      sun.setDate(sat.getDate() + 1)
+      return [sat.toISOString().split("T")[0], sun.toISOString().split("T")[0]]
+    }
+
+    function formatDateLabel(dateStr) {
+      const d = new Date(dateStr + "T12:00:00")
+      return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
+    }
+
     async function checkWeather() {
       const city = document.getElementById("cityInput").value.trim()
       if (!city) return
@@ -306,116 +379,65 @@
       }
 
       clearError()
-      document.getElementById("result").style.display = "none"
+      document.getElementById("resultsArea").style.display = "none"
+      document.getElementById("trailsCard").style.display = "none"
       document.getElementById("spinner").style.display = "block"
       document.getElementById("checkBtn").disabled = true
 
       try {
-        // Step 1: Geocode city
+        // Step 1: Geocode
         document.getElementById("spinnerText").textContent = "Finding city..."
-        let geoRes
-        try {
-          geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,
-            { headers: { "Accept-Language": "en" } }
-          )
-          if (!geoRes.ok) throw new Error(`Geocoding failed (${geoRes.status})`)
-        } catch (e) {
-          throw new Error(`Could not look up city — ${e.message}`)
-        }
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,
+          { headers: { "Accept-Language": "en" } }
+        ).catch(e => { throw new Error(`Could not look up city — ${e.message}`) })
+        if (!geoRes.ok) throw new Error(`Geocoding failed (${geoRes.status})`)
+
         const geo = await geoRes.json()
         if (!geo.length) throw new Error(`City "${city}" not found. Try a different spelling.`)
-
         const { lat, lon, display_name } = geo[0]
         const shortName = display_name.split(",").slice(0, 2).join(",")
 
-        // Step 2: Fetch tomorrow's weather from Open-Meteo
+        // Step 2: Fetch weather
         document.getElementById("spinnerText").textContent = "Fetching weather..."
-        const tomorrow = getTomorrowDate()
+        const dates = currentMode === 'tomorrow' ? [getTomorrowDate()] : getWeekendDates()
         const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
           `?latitude=${lat}&longitude=${lon}` +
           `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,` +
           `precipitation_probability_max,wind_speed_10m_max,cloud_cover_mean,weathercode` +
-          `&timezone=auto&start_date=${tomorrow}&end_date=${tomorrow}`
+          `&timezone=auto&start_date=${dates[0]}&end_date=${dates[dates.length - 1]}`
 
-        let weather
-        try {
-          const weatherRes = await fetch(weatherUrl)
-          if (!weatherRes.ok) throw new Error(`HTTP ${weatherRes.status}`)
-          weather = await weatherRes.json()
-        } catch (e) {
-          throw new Error(`Could not fetch weather data — ${e.message}`)
-        }
+        const weatherRes = await fetch(weatherUrl)
+          .catch(e => { throw new Error(`Could not fetch weather — ${e.message}`) })
+        if (!weatherRes.ok) throw new Error(`Weather API error ${weatherRes.status}`)
+        const weather = await weatherRes.json()
+        if (!weather.daily) throw new Error("Weather data unavailable for this location")
 
         const d = weather.daily
-        if (!d) throw new Error("Weather data unavailable for this location")
+        const days = dates.map((date, i) => ({
+          date,
+          tempMax:   Math.round(d.temperature_2m_max[i]),
+          tempMin:   Math.round(d.temperature_2m_min[i]),
+          rain:      d.precipitation_sum[i],
+          rainProb:  d.precipitation_probability_max[i],
+          wind:      Math.round(d.wind_speed_10m_max[i]),
+          cloud:     Math.round(d.cloud_cover_mean[i]),
+          condition: WMO_CODES[d.weathercode[i]] || "Unknown"
+        }))
 
-        const tempMax  = Math.round(d.temperature_2m_max[0])
-        const tempMin  = Math.round(d.temperature_2m_min[0])
-        const rain     = d.precipitation_sum[0]
-        const rainProb = d.precipitation_probability_max[0]
-        const wind     = Math.round(d.wind_speed_10m_max[0])
-        const cloud    = Math.round(d.cloud_cover_mean[0])
-        const code     = d.weathercode[0]
-        const condition = WMO_CODES[code] || "Unknown"
-
-        // Step 3: Update weather stats UI
-        document.getElementById("statTemp").textContent  = `${tempMin}°C – ${tempMax}°C`
-        document.getElementById("statRain").textContent  = `${rainProb}% (${rain} mm)`
-        document.getElementById("statWind").textContent  = `${wind} km/h`
-        document.getElementById("statCloud").textContent = `${cloud}%`
-        document.getElementById("locationLabel").textContent = `Tomorrow in ${shortName}`
-
-        // Step 4: Ask AI via Worker proxy
+        // Step 3: AI verdicts
         document.getElementById("spinnerText").textContent = "Asking AI..."
-        const prompt = `Tomorrow's hiking weather forecast for ${shortName}:
-- Temperature: ${tempMin}°C to ${tempMax}°C
-- Rain probability: ${rainProb}%
-- Precipitation: ${rain} mm
-- Wind speed: ${wind} km/h
-- Cloud cover: ${cloud}%
-- Conditions: ${condition}
+        const verdicts = await getAIVerdicts(shortName, days)
 
-Evaluate if this is good for hiking. Respond with valid JSON only:
-{"verdict": "GREAT" | "SO-SO" | "STAY HOME", "explanation": "2-3 sentences for a hiker"}`
+        // Render verdict immediately; trails load in background
+        renderDays(days, verdicts, shortName)
 
-        let aiResponse
-        try {
-          const aiRes = await fetch(CONFIG.WORKER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
-                {
-                  role: "system",
-                  content: "You are a concise hiking weather advisor. Always respond with valid JSON only, no markdown, no extra text."
-                },
-                { role: "user", content: prompt }
-              ],
-              max_tokens: 200,
-              temperature: 0.4
-            })
-          })
-          if (!aiRes.ok) {
-            const text = await aiRes.text()
-            throw new Error(`Worker returned ${aiRes.status}: ${text}`)
-          }
-          aiResponse = await aiRes.json()
-        } catch (e) {
-          throw new Error(`AI request failed — ${e.message}`)
-        }
-
-        const raw = aiResponse.choices?.[0]?.message?.content?.trim()
-        if (!raw) throw new Error("No response from AI. Check your OpenAI API key.")
-
-        let parsed
-        try {
-          parsed = JSON.parse(raw)
-        } catch {
-          throw new Error(`Unexpected AI response: ${raw}`)
-        }
-        renderVerdict(parsed.verdict, parsed.explanation)
+        // Step 4: Trails load in background after verdict is shown
+        document.getElementById("trailsCard").style.display = "block"
+        document.getElementById("trailsList").innerHTML = '<div class="trails-status">Searching for nearby trails...</div>'
+        fetchTrails(lat, lon)
+          .then(trails => renderTrails(trails))
+          .catch(() => { document.getElementById("trailsCard").style.display = "none" })
 
       } catch (err) {
         showError(err.message || "Something went wrong. Please try again.")
@@ -425,36 +447,150 @@ Evaluate if this is good for hiking. Respond with valid JSON only:
       }
     }
 
-    function renderVerdict(verdict, explanation) {
-      const el = document.getElementById("verdict")
-      const icon = document.getElementById("verdictIcon")
-      const label = document.getElementById("verdictLabel")
-      const exp = document.getElementById("explanation")
+    async function getAIVerdicts(locationName, days) {
+      let prompt, maxTokens
 
-      el.className = "verdict"
+      if (days.length === 1) {
+        const day = days[0]
+        prompt = `Tomorrow's hiking weather forecast for ${locationName}:
+- Temperature: ${day.tempMin}°C to ${day.tempMax}°C
+- Rain probability: ${day.rainProb}%
+- Precipitation: ${day.rain} mm
+- Wind speed: ${day.wind} km/h
+- Cloud cover: ${day.cloud}%
+- Conditions: ${day.condition}
 
-      if (verdict === "GREAT") {
-        el.classList.add("great")
-        icon.textContent = "⛰️"
-        label.textContent = "Great weather for hiking!"
-      } else if (verdict === "SO-SO") {
-        el.classList.add("soso")
-        icon.textContent = "🌥️"
-        label.textContent = "So-so — could go either way"
+Evaluate if this is good for hiking. Respond with valid JSON only:
+{"verdict": "GREAT" | "SO-SO" | "STAY HOME", "explanation": "2-3 sentences for a hiker"}`
+        maxTokens = 200
       } else {
-        el.classList.add("stayhome")
-        icon.textContent = "🌧️"
-        label.textContent = "Better stay at home"
+        const parts = days.map(day => `${formatDateLabel(day.date)}:
+- Temperature: ${day.tempMin}°C to ${day.tempMax}°C
+- Rain probability: ${day.rainProb}%
+- Precipitation: ${day.rain} mm
+- Wind speed: ${day.wind} km/h
+- Cloud cover: ${day.cloud}%
+- Conditions: ${day.condition}`).join("\n\n")
+
+        prompt = `Weekend hiking forecast for ${locationName}:\n\n${parts}\n\nFor each day, evaluate hiking suitability. Respond with a valid JSON array only:\n[{"date":"${days[0].date}","verdict":"GREAT"|"SO-SO"|"STAY HOME","explanation":"2-3 sentences"},{"date":"${days[1].date}","verdict":"...","explanation":"..."}]`
+        maxTokens = 400
       }
 
-      exp.textContent = explanation
-      document.getElementById("result").style.display = "block"
+      const aiRes = await fetch(CONFIG.WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a concise hiking weather advisor. Always respond with valid JSON only, no markdown, no extra text." },
+            { role: "user", content: prompt }
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.4
+        })
+      }).catch(e => { throw new Error(`AI request failed — ${e.message}`) })
+
+      if (!aiRes.ok) {
+        const text = await aiRes.text()
+        throw new Error(`Worker returned ${aiRes.status}: ${text}`)
+      }
+
+      const aiResponse = await aiRes.json()
+      const raw = aiResponse.choices?.[0]?.message?.content?.trim()
+      if (!raw) throw new Error("No response from AI. Check your OpenAI API key.")
+
+      let parsed
+      try { parsed = JSON.parse(raw) }
+      catch { throw new Error(`Unexpected AI response: ${raw}`) }
+
+      return Array.isArray(parsed) ? parsed : [parsed]
     }
 
-    function getTomorrowDate() {
-      const d = new Date()
-      d.setDate(d.getDate() + 1)
-      return d.toISOString().split("T")[0]
+    async function fetchTrails(lat, lon) {
+      const query = `[out:json][timeout:20];relation["route"="hiking"](around:25000,${lat},${lon});out 10 tags;`
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 9000)
+      try {
+        const res = await fetch(url, { signal: controller.signal })
+        if (!res.ok) throw new Error(`Overpass ${res.status}`)
+        const data = await res.json()
+        return (data.elements || [])
+          .filter(el => el.tags?.name)
+          .slice(0, 6)
+          .map(el => ({
+            name: el.tags.name,
+            distance: el.tags.distance || el.tags["osmc:distance"] || null,
+            network: el.tags.network || null
+          }))
+      } finally {
+        clearTimeout(timeout)
+      }
+    }
+
+    function buildDayHTML(day, v) {
+      const cls   = v?.verdict === "GREAT" ? "great" : v?.verdict === "SO-SO" ? "soso" : "stayhome"
+      const icon  = v?.verdict === "GREAT" ? "⛰️" : v?.verdict === "SO-SO" ? "🌥️" : "🌧️"
+      const label = v?.verdict === "GREAT" ? "Great weather for hiking!"
+                  : v?.verdict === "SO-SO" ? "So-so — could go either way"
+                  : "Better stay at home"
+      return `
+        <div class="verdict ${v ? cls : ''}">
+          <div class="verdict-icon">${v ? icon : "…"}</div>
+          <div class="verdict-label">${v ? label : "No AI verdict"}</div>
+          ${v?.explanation ? `<div class="explanation">${v.explanation}</div>` : ""}
+        </div>
+        <div class="weather-grid">
+          <div class="weather-stat">
+            <div class="label">Temperature</div>
+            <div class="value">${day.tempMin}°C – ${day.tempMax}°C</div>
+          </div>
+          <div class="weather-stat">
+            <div class="label">Rain chance</div>
+            <div class="value">${day.rainProb}% (${day.rain} mm)</div>
+          </div>
+          <div class="weather-stat">
+            <div class="label">Wind speed</div>
+            <div class="value">${day.wind} km/h</div>
+          </div>
+          <div class="weather-stat">
+            <div class="label">Cloud cover</div>
+            <div class="value">${day.cloud}%</div>
+          </div>
+        </div>`
+    }
+
+    function renderDays(days, verdicts, shortName) {
+      document.getElementById("locationLabel").textContent =
+        currentMode === 'tomorrow' ? `Tomorrow in ${shortName}` : `Weekend forecast for ${shortName}`
+
+      const container = document.getElementById("dayResults")
+      if (currentMode === 'tomorrow') {
+        container.innerHTML = `<div class="day-card">${buildDayHTML(days[0], verdicts[0])}</div>`
+      } else {
+        container.innerHTML = days.map((day, i) => {
+          const v = verdicts?.find(v => v.date === day.date) ?? verdicts?.[i] ?? null
+          return `<div class="day-card">
+            <div class="day-label">${formatDateLabel(day.date)}</div>
+            ${buildDayHTML(day, v)}
+          </div>`
+        }).join("")
+      }
+      document.getElementById("resultsArea").style.display = "block"
+    }
+
+    function renderTrails(trails) {
+      const card = document.getElementById("trailsCard")
+      const list = document.getElementById("trailsList")
+      if (!trails?.length) {
+        card.style.display = "none"
+        return
+      }
+      list.innerHTML = trails.map(t => `
+        <div class="trail-item">
+          <span class="trail-name">${t.name}</span>
+          <span class="trail-meta">${t.distance ? t.distance + " km" : t.network || ""}</span>
+        </div>`).join("")
     }
   </script>
 
