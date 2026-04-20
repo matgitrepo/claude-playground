@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podcast Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1a1a1f;
+      color: #e8e8ed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #a0a8c5;
+    }
+
+    header p {
+      margin-top: 8px;
+      color: #6a7494;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #25252b;
+      border: 1px solid #2e2e36;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 16px;
+    }
+
+    textarea {
+      width: 100%;
+      background: #1a1a1f;
+      border: 1px solid #3a3a45;
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: #e8e8ed;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+
+    textarea:focus { border-color: #6a6aac; }
+    textarea::placeholder { color: #4a4a5a; }
+
+    button#generateBtn {
+      margin-top: 14px;
+      width: 100%;
+      background: #5a5a9f;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button#generateBtn:hover { background: #6a6ab0; }
+    button#generateBtn:disabled { background: #3a3a6a; cursor: not-allowed; }
+
+    .error {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: #2e1a1a;
+      border: 1px solid #5a2a2a;
+      border-radius: 10px;
+      color: #e88080;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    /* ─── Progress ─────────────────────────────────────── */
+
+    .progress-card {
+      background: #25252b;
+      border: 1px solid #2e2e36;
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 16px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      font-size: 0.92rem;
+      color: #5a5a6a;
+      border-bottom: 1px solid #2e2e36;
+    }
+
+    .step:last-child { border-bottom: none; }
+
+    .step.active { color: #c8c8e8; }
+    .step.done   { color: #6aac8a; }
+
+    .step-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #2e2e36;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .step.active .step-icon {
+      background: #3a3a6a;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    .step.done .step-icon { background: #1a3a2a; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ─── Result ───────────────────────────────────────── */
+
+    .result-card {
+      background: #25252b;
+      border: 1px solid #2e2e36;
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 16px;
+    }
+
+    .result-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #6a7494;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    audio {
+      width: 100%;
+      margin-bottom: 14px;
+      accent-color: #6a6aac;
+    }
+
+    .btn-download {
+      display: inline-block;
+      background: #2e2e3a;
+      border: 1px solid #3a3a4a;
+      border-radius: 8px;
+      padding: 10px 20px;
+      color: #a0a8c5;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover { background: #3a3a4a; }
+
+    /* ─── Script ───────────────────────────────────────── */
+
+    .script-toggle {
+      margin-top: 20px;
+      border-top: 1px solid #2e2e36;
+      padding-top: 16px;
+    }
+
+    .script-toggle summary {
+      font-size: 0.82rem;
+      color: #6a7494;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+
+    .script-toggle summary::before {
+      content: "▶  ";
+      font-size: 0.7rem;
+    }
+
+    details[open] .script-toggle summary::before { content: "▼  "; }
+
+    .script-lines {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .script-line {
+      display: flex;
+      gap: 12px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .speaker-badge {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .speaker-a { background: #2a2a5a; color: #9090d0; }
+    .speaker-b { background: #1a3a2a; color: #70b090; }
+
+    .script-text { color: #b0b0c8; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Podcast Generator</h1>
+    <p>Enter a topic and get a fully voiced podcast</p>
+  </header>
+
+  <div class="card">
+    <textarea id="topicInput" placeholder="e.g. Why sleep is the ultimate performance hack&#10;The surprisingly dark history of sugar&#10;How cities can be designed for happiness"></textarea>
+    <button id="generateBtn" onclick="generatePodcast()">Generate Podcast</button>
+    <div class="error" id="errorBox"></div>
+  </div>
+
+  <div class="progress-card" id="progressCard" style="display:none">
+    <div class="step" id="stepScript">
+      <div class="step-icon" id="iconScript">✍️</div>
+      <span id="labelScript">Writing script...</span>
+    </div>
+    <div class="step" id="stepVoice">
+      <div class="step-icon" id="iconVoice">🎙️</div>
+      <span id="labelVoice">Generating voices...</span>
+    </div>
+    <div class="step" id="stepStitch">
+      <div class="step-icon" id="iconStitch">🔊</div>
+      <span id="labelStitch">Stitching audio...</span>
+    </div>
+  </div>
+
+  <div class="result-card" id="resultCard" style="display:none">
+    <div class="result-label">Your Podcast</div>
+    <audio controls id="audioPlayer"></audio>
+    <a class="btn-download" id="downloadLink" download="podcast.wav">Download WAV</a>
+    <details id="scriptDetails">
+      <div class="script-toggle">
+        <summary>View script</summary>
+        <div class="script-lines" id="scriptLines"></div>
+      </div>
+    </details>
+  </div>
+
+  <script>
+    const CONFIG = {
+      WORKER_URL: "https://podcast-generator-proxy.YOUR_SUBDOMAIN.workers.dev"
+    }
+
+    let wavBlobUrl = null
+
+    document.getElementById("topicInput").addEventListener("keydown", e => {
+      if (e.key === "Enter" && e.ctrlKey) generatePodcast()
+    })
+
+    function showError(msg) {
+      const box = document.getElementById("errorBox")
+      box.textContent = msg
+      box.style.display = "block"
+    }
+
+    function clearError() {
+      document.getElementById("errorBox").style.display = "none"
+    }
+
+    function setStep(id, state, label) {
+      const step = document.getElementById("step" + id)
+      const icon = document.getElementById("icon" + id)
+      const lbl  = document.getElementById("label" + id)
+      step.className = "step " + state
+      if (label) lbl.textContent = label
+      if (state === "done") icon.textContent = "✓"
+    }
+
+    async function generatePodcast() {
+      const topic = document.getElementById("topicInput").value.trim()
+      if (!topic) return
+
+      if (CONFIG.WORKER_URL.includes("YOUR_SUBDOMAIN")) {
+        showError("Worker URL not configured. Update CONFIG.WORKER_URL in index.html.")
+        return
+      }
+
+      clearError()
+      document.getElementById("generateBtn").disabled = true
+      document.getElementById("resultCard").style.display = "none"
+      document.getElementById("progressCard").style.display = "block"
+
+      setStep("Script", "active", "Writing script...")
+      setStep("Voice",  "", "Generating voices...")
+      setStep("Stitch", "", "Stitching audio...")
+
+      try {
+        // Step 1: Generate dialog
+        const segments = await generateDialog(topic)
+        setStep("Script", "done", `Script ready — ${segments.length} exchanges`)
+
+        // Step 2: Generate audio for each segment
+        setStep("Voice", "active", `Generating voices (0/${segments.length})...`)
+        const audioCtx = new AudioContext()
+        const audioBuffers = []
+
+        for (let i = 0; i < segments.length; i++) {
+          const { speaker, text } = segments[i]
+          setStep("Voice", "active", `Generating voices (${i + 1}/${segments.length})...`)
+          const mp3 = await fetchTTS(text, speaker)
+          const decoded = await audioCtx.decodeAudioData(mp3)
+          audioBuffers.push(decoded)
+          if (i < segments.length - 1) await sleep(150)
+        }
+        setStep("Voice", "done", `${segments.length} voice segments ready`)
+
+        // Step 3: Stitch
+        setStep("Stitch", "active", "Stitching audio...")
+        const combined = concatAudioBuffers(audioCtx, audioBuffers)
+        const wav = audioBufferToWav(combined)
+
+        if (wavBlobUrl) URL.revokeObjectURL(wavBlobUrl)
+        wavBlobUrl = URL.createObjectURL(new Blob([wav], { type: "audio/wav" }))
+
+        setStep("Stitch", "done", "Done!")
+
+        // Show result
+        document.getElementById("audioPlayer").src = wavBlobUrl
+        document.getElementById("downloadLink").href = wavBlobUrl
+        renderScript(segments)
+        document.getElementById("resultCard").style.display = "block"
+
+      } catch (err) {
+        showError(err.message || "Something went wrong. Please try again.")
+      } finally {
+        document.getElementById("generateBtn").disabled = false
+      }
+    }
+
+    async function generateDialog(topic) {
+      const res = await fetch(CONFIG.WORKER_URL + "/dialog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic })
+      }).catch(e => { throw new Error(`Could not reach worker — ${e.message}`) })
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`Dialog error ${res.status}: ${text}`)
+      }
+
+      const data = await res.json()
+      const raw = data.choices?.[0]?.message?.content?.trim()
+      if (!raw) throw new Error("No script returned. Check your OpenAI API key.")
+
+      let parsed
+      try { parsed = JSON.parse(raw) }
+      catch { throw new Error(`Could not parse script: ${raw.slice(0, 100)}`) }
+
+      if (!Array.isArray(parsed) || !parsed.length) throw new Error("Script format invalid.")
+      return parsed
+    }
+
+    async function fetchTTS(text, speaker) {
+      const res = await fetch(CONFIG.WORKER_URL + "/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, speaker })
+      }).catch(e => { throw new Error(`TTS request failed — ${e.message}`) })
+
+      if (!res.ok) {
+        const text = await res.text()
+        let msg
+        try { msg = JSON.parse(text).error } catch { msg = text }
+        throw new Error(`Voice error: ${msg}`)
+      }
+
+      return await res.arrayBuffer()
+    }
+
+    function concatAudioBuffers(ctx, buffers) {
+      const channels = Math.max(...buffers.map(b => b.numberOfChannels))
+      const rate = buffers[0].sampleRate
+      const total = buffers.reduce((s, b) => s + b.length, 0)
+      const out = ctx.createBuffer(channels, total, rate)
+      let offset = 0
+      for (const buf of buffers) {
+        for (let ch = 0; ch < channels; ch++) {
+          const src = buf.getChannelData(Math.min(ch, buf.numberOfChannels - 1))
+          out.getChannelData(ch).set(src, offset)
+        }
+        offset += buf.length
+      }
+      return out
+    }
+
+    function audioBufferToWav(buf) {
+      const numCh = buf.numberOfChannels
+      const rate = buf.sampleRate
+      const len = buf.length
+      const dataSize = len * numCh * 2
+      const ab = new ArrayBuffer(44 + dataSize)
+      const v = new DataView(ab)
+      const str = (off, s) => { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)) }
+
+      str(0, "RIFF");  v.setUint32(4, 36 + dataSize, true)
+      str(8, "WAVE");  str(12, "fmt ")
+      v.setUint32(16, 16, true);        v.setUint16(20, 1, true)
+      v.setUint16(22, numCh, true);     v.setUint32(24, rate, true)
+      v.setUint32(28, rate * numCh * 2, true)
+      v.setUint16(32, numCh * 2, true); v.setUint16(34, 16, true)
+      str(36, "data");  v.setUint32(40, dataSize, true)
+
+      let off = 44
+      for (let i = 0; i < len; i++) {
+        for (let ch = 0; ch < numCh; ch++) {
+          const s = Math.max(-1, Math.min(1, buf.getChannelData(ch)[i]))
+          v.setInt16(off, s < 0 ? s * 32768 : s * 32767, true)
+          off += 2
+        }
+      }
+      return ab
+    }
+
+    function renderScript(segments) {
+      document.getElementById("scriptLines").innerHTML = segments.map(({ speaker, text }) => `
+        <div class="script-line">
+          <div class="speaker-badge speaker-${speaker.toLowerCase()}">${speaker}</div>
+          <div class="script-text">${text}</div>
+        </div>`).join("")
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+  </script>
+
+</body>
+</html>

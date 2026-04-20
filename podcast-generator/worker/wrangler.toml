@@ -1,0 +1,16 @@
+name = "podcast-generator-proxy"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+[vars]
+ALLOWED_ORIGIN = "*"
+# Lock this down to your GitHub Pages URL once deployed:
+# ALLOWED_ORIGIN = "https://matgitrepo.github.io"
+
+# Voice IDs from elevenlabs.io/voice-library — change to your preferred voices
+VOICE_A = "21m00Tcm4TlvDq8ikWAM"
+# VOICE_B defaults to Adam if not set
+
+# Secrets — set via:
+#   wrangler secret put OPENAI_API_KEY
+#   wrangler secret put ELEVENLABS_API_KEY

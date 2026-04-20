@@ -23,6 +23,11 @@ claude-playground/
 │   └── worker/
 │       ├── worker.js
 │       └── wrangler.toml
+├── podcast-generator/
+│   ├── index.html
+│   └── worker/
+│       ├── worker.js
+│       └── wrangler.toml
 └── .vscode/settings.json
 ```
 
@@ -59,6 +64,21 @@ claude-playground/
   - `ALLOWED_ORIGIN` in `wrangler.toml` — locked to `https://matgitrepo.github.io`
   - Cost protection: model locked to `gpt-4o-mini`, `max_tokens` capped at 300
 
+### Project: Podcast Generator (`podcast-generator/index.html`)
+- User enters a topic; app generates a voiced podcast as a downloadable WAV file
+- Flow: AI writes dialog → ElevenLabs TTS per segment → browser stitches to WAV
+- Two speakers (Host A / Host B) with distinct ElevenLabs voices
+- Script viewer (collapsible) shown after generation
+- Worker proxies both OpenAI (dialog) and ElevenLabs (TTS) to keep keys secure
+- `CONFIG.WORKER_URL` in `index.html` must be updated to the deployed Worker URL
+- Worker deployment: see `podcast-generator/worker/` — uses Wrangler CLI
+  - `wrangler secret put OPENAI_API_KEY`
+  - `wrangler secret put ELEVENLABS_API_KEY`
+  - Voice IDs configurable via `VOICE_A` / `VOICE_B` vars in `wrangler.toml`
+  - ElevenLabs free tier: ~10,000 chars/month (~3 full podcasts)
+- Output: WAV file (browser-generated, never stored server-side)
+- Ctrl+Enter submits the topic
+
 ### Running
 Open any project's `index.html` directly in a browser — no server or build step needed.
-The hiking planner requires the Cloudflare Worker to be deployed first (see above).
+The hiking planner and podcast generator require their Cloudflare Workers to be deployed first.
