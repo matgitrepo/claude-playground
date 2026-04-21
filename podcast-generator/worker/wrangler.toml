@@ -3,13 +3,16 @@ main = "worker.js"
 compatibility_date = "2024-09-23"
 
 [vars]
-ALLOWED_ORIGIN = "*"
-# Lock this down to your GitHub Pages URL once deployed:
-# ALLOWED_ORIGIN = "https://matgitrepo.github.io"
+ALLOWED_ORIGIN = "https://matgitrepo.github.io"
+DAILY_LIMIT = "200"
 
 # Voice IDs from elevenlabs.io/voice-library — change to your preferred voices
 VOICE_A = "IKne3meq5aSn9XLyUdCD"
 VOICE_B = "XrExE9yKIg1WjnnlVkGX"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "4748435019e94886b86f40461b4bb006"
 
 # Secrets — set via:
 #   wrangler secret put OPENAI_API_KEY

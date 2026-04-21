@@ -12,6 +12,15 @@ export default {
     if (!isAllowed(origin, env)) return new Response("Forbidden", { status: 403 })
     if (request.method !== "POST") return new Response("Method not allowed", { status: 405 })
 
+    // Daily rate limit
+    const today = new Date().toISOString().split("T")[0]
+    const count = parseInt(await env.RATE_LIMIT.get(`rate:${today}`) || "0", 10)
+    const limit = parseInt(env.DAILY_LIMIT || "200", 10)
+    if (count >= limit) {
+      return json({ error: "Daily request limit reached. Try again tomorrow." }, 429, origin, env)
+    }
+    await env.RATE_LIMIT.put(`rate:${today}`, String(count + 1), { expirationTtl: 172800 })
+
     if (path === "/dialog") return handleDialog(request, env, origin)
     if (path === "/tts")    return handleTTS(request, env, origin)
 
