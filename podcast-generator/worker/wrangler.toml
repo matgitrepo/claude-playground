@@ -8,8 +8,8 @@ ALLOWED_ORIGIN = "*"
 # ALLOWED_ORIGIN = "https://matgitrepo.github.io"
 
 # Voice IDs from elevenlabs.io/voice-library — change to your preferred voices
-VOICE_A = "21m00Tcm4TlvDq8ikWAM"
-# VOICE_B defaults to Adam if not set
+VOICE_A = "IKne3meq5aSn9XLyUdCD"
+VOICE_B = "XrExE9yKIg1WjnnlVkGX"
 
 # Secrets — set via:
 #   wrangler secret put OPENAI_API_KEY
