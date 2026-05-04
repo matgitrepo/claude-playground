@@ -10,7 +10,7 @@ ALLOWED_ORIGIN = "null"
 [[d1_databases]]
 binding = "DB"
 database_name = "market-intel"
-database_id = "REPLACE_WITH_DB_ID"
+database_id = "d48fb498-6e79-4cdf-bfeb-9d383f504416"
 
 [triggers]
 crons = ["0 2 * * *"]
