@@ -8,20 +8,22 @@ export default {
     const origin = request.headers.get("Origin") || ""
     const path = new URL(request.url).pathname
 
-    if (request.method === "OPTIONS") return preflight(origin, env)
-    if (!isAllowed(origin, env)) return new Response("Forbidden", { status: 403 })
-
-    if (path === "/trends") return handleTrends(env, origin)
-
-    // Manual collection trigger for testing — protected by a secret header
+    // Manual collection trigger — secret-protected, no origin check needed
     if (path === "/collect") {
       const secret = request.headers.get("X-Collect-Secret")
       if (!secret || secret !== env.COLLECT_SECRET) {
         return new Response("Forbidden", { status: 403 })
       }
       await collectSnapshot(env)
-      return json({ ok: true, message: "Snapshot collected" }, 200, origin, env)
+      return new Response(JSON.stringify({ ok: true, message: "Snapshot collected" }), {
+        headers: { "Content-Type": "application/json" }
+      })
     }
+
+    if (request.method === "OPTIONS") return preflight(origin, env)
+    if (!isAllowed(origin, env)) return new Response("Forbidden", { status: 403 })
+
+    if (path === "/trends") return handleTrends(env, origin)
 
     return new Response("Not found", { status: 404 })
   },
