@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Jobs Poland — Trending Skills</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #111318;
+      color: #e0e4f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #c0c8e8;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin-top: 8px;
+      color: #5a6080;
+      font-size: 0.88rem;
+    }
+
+    .meta {
+      font-size: 0.78rem;
+      color: #404560;
+      margin-top: 4px;
+    }
+
+    /* ─── Notice banner ────────────────────────────────── */
+
+    .notice {
+      width: 100%;
+      max-width: 480px;
+      background: #1a1d2e;
+      border: 1px solid #2a2d4a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 0.85rem;
+      color: #7a80aa;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .notice strong { color: #9aa0c8; }
+
+    /* ─── Skill cards ──────────────────────────────────── */
+
+    .skills-list {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .skill-card {
+      background: #181b28;
+      border: 1px solid #22253a;
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .skill-rank {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #404560;
+      width: 18px;
+      flex-shrink: 0;
+    }
+
+    .skill-name {
+      flex: 1;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #d0d8f0;
+      text-transform: capitalize;
+    }
+
+    .skill-count {
+      font-size: 0.82rem;
+      color: #5a6080;
+      white-space: nowrap;
+    }
+
+    .skill-change {
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .change-up  { background: #0e2a1a; color: #5ad48a; }
+    .change-new { background: #1a1a0e; color: #d4c45a; }
+    .change-na  { background: #1a1c28; color: #4a5070; }
+
+    /* ─── Loading / error ──────────────────────────────── */
+
+    .state-card {
+      width: 100%;
+      max-width: 480px;
+      background: #181b28;
+      border: 1px solid #22253a;
+      border-radius: 14px;
+      padding: 40px;
+      text-align: center;
+      color: #5a6080;
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #22253a;
+      border-top-color: #6070c0;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-text { color: #c07070; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Product Jobs in Poland</h1>
+    <p>Top skills — last 30 days · JustJoin.it</p>
+    <div class="meta" id="metaLine"></div>
+  </header>
+
+  <div id="notice" class="notice" style="display:none"></div>
+  <div id="content"></div>
+
+  <script>
+    const CONFIG = {
+      WORKER_URL: "https://market-intel-worker.YOUR_SUBDOMAIN.workers.dev"
+    }
+
+    async function load() {
+      const content = document.getElementById("content")
+      content.innerHTML = `<div class="state-card"><div class="spinner"></div><br>Loading...</div>`
+
+      try {
+        const res = await fetch(CONFIG.WORKER_URL + "/trends")
+        if (!res.ok) throw new Error(`Worker returned ${res.status}`)
+        const data = await res.json()
+        render(data)
+      } catch (err) {
+        content.innerHTML = `<div class="state-card error-text">Could not load data.<br>${err.message}</div>`
+      }
+    }
+
+    function render({ trends, days_of_data, last_updated }) {
+      // Meta line
+      if (last_updated) {
+        document.getElementById("metaLine").textContent =
+          `Last updated: ${last_updated} · ${days_of_data} day${days_of_data !== 1 ? "s" : ""} of data collected`
+      }
+
+      // Notice if not enough history yet
+      const notice = document.getElementById("notice")
+      if (days_of_data < 30) {
+        notice.style.display = "block"
+        notice.innerHTML = days_of_data === 0
+          ? `<strong>No data yet.</strong> The first snapshot will be collected tonight at 02:00 UTC. Check back tomorrow.`
+          : `<strong>${days_of_data}/30 days</strong> of data collected. Showing current top skills — trend comparison (% change) will be available once 30 days of snapshots are in.`
+      }
+
+      if (!trends?.length) {
+        document.getElementById("content").innerHTML =
+          `<div class="state-card">No skill data available yet.</div>`
+        return
+      }
+
+      document.getElementById("content").innerHTML = `
+        <div class="skills-list">
+          ${trends.map((t, i) => skillCard(t, i + 1, days_of_data)).join("")}
+        </div>`
+    }
+
+    function skillCard(t, rank, daysOfData) {
+      let changeBadge
+      if (daysOfData < 30 || t.change === null && !t.is_new) {
+        changeBadge = `<span class="skill-change change-na">${t.count} mentions</span>`
+      } else if (t.is_new) {
+        changeBadge = `<span class="skill-change change-new">New</span>`
+      } else {
+        changeBadge = `<span class="skill-change change-up">+${t.change}%</span>`
+      }
+
+      return `
+        <div class="skill-card">
+          <div class="skill-rank">${rank}</div>
+          <div class="skill-name">${escHtml(t.skill)}</div>
+          ${changeBadge}
+        </div>`
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    }
+
+    load()
+  </script>
+
+</body>
+</html>

@@ -28,6 +28,12 @@ claude-playground/
 │   └── worker/
 │       ├── worker.js
 │       └── wrangler.toml
+├── market-intel/
+│   ├── index.html
+│   └── worker/
+│       ├── worker.js
+│       ├── schema.sql
+│       └── wrangler.toml
 └── .vscode/settings.json
 ```
 
@@ -79,6 +85,19 @@ claude-playground/
 - Output: WAV file (browser-generated, never stored server-side)
 - Ctrl+Enter submits the topic
 
+### Project: Market Intel (`market-intel/index.html`)
+- Shows top 5 trending skills in product jobs in Poland (JustJoin.it data)
+- Worker cron runs daily at 02:00 UTC, fetches JustJoin.it, stores skill counts in Cloudflare D1
+- Trends = last 30 days vs previous 30 days; shows top skills by count until 30 days of data
+- No API keys needed for data collection (JustJoin.it is public)
+- `CONFIG.WORKER_URL` in `index.html` must point to the deployed Worker
+- Worker deployment: see `market-intel/worker/` — uses Wrangler CLI
+  - `wrangler d1 create market-intel` — create the D1 database
+  - `wrangler d1 execute market-intel --file=schema.sql` — run migrations
+  - `wrangler secret put COLLECT_SECRET` — secret for manual `/collect` trigger
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+- Categories tracked: product-management, project-management (from `PRODUCT_CATEGORIES` in worker.js)
+
 ### Running
 Open any project's `index.html` directly in a browser — no server or build step needed.
-The hiking planner and podcast generator require their Cloudflare Workers to be deployed first.
+The hiking planner, podcast generator, and market intel app require their Cloudflare Workers to be deployed first.
