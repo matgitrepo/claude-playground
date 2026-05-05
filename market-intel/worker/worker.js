@@ -14,10 +14,17 @@ export default {
       if (!secret || secret !== env.COLLECT_SECRET) {
         return new Response("Forbidden", { status: 403 })
       }
-      await collectSnapshot(env)
-      return new Response(JSON.stringify({ ok: true, message: "Snapshot collected" }), {
-        headers: { "Content-Type": "application/json" }
-      })
+      try {
+        await collectSnapshot(env)
+        return new Response(JSON.stringify({ ok: true, message: "Snapshot collected" }), {
+          headers: { "Content-Type": "application/json" }
+        })
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: err.message, stack: err.stack }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        })
+      }
     }
 
     if (request.method === "OPTIONS") return preflight(origin, env)
