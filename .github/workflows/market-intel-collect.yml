@@ -1,0 +1,31 @@
+name: Market Intel — Collect Skills
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # Daily at 02:00 UTC
+  workflow_dispatch:        # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: market-intel/scraper
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium --with-deps
+        working-directory: market-intel/scraper
+
+      - name: Collect skills from JustJoin.it
+        env:
+          WORKER_URL: ${{ secrets.MARKET_INTEL_WORKER_URL }}
+          COLLECT_SECRET: ${{ secrets.MARKET_INTEL_COLLECT_SECRET }}
+        run: node collect.js
+        working-directory: market-intel/scraper

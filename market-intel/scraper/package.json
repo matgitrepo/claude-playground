@@ -1,0 +1,10 @@
+{
+  "name": "market-intel-scraper",
+  "version": "1.0.0",
+  "scripts": {
+    "collect": "node collect.js"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  }
+}
