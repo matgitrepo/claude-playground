@@ -1,4 +1,6 @@
-const { chromium } = require('playwright')
+const { chromium } = require('playwright-extra')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+chromium.use(StealthPlugin())
 
 const WORKER_URL    = process.env.WORKER_URL
 const COLLECT_SECRET = process.env.COLLECT_SECRET
@@ -10,8 +12,13 @@ if (!WORKER_URL || !COLLECT_SECRET) {
 
 async function run() {
   console.log('Launching browser...')
-  const browser = await chromium.launch()
-  const page = await browser.newPage()
+  const browser = await chromium.launch({ headless: true })
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 800 },
+    locale: 'en-US'
+  })
+  const page = await context.newPage()
 
   let jobData = null
 
@@ -49,12 +56,19 @@ async function run() {
 
   console.log('Navigating to JustJoin.it product management listings...')
   await page.goto('https://justjoin.it/job-offers/product-management', {
-    waitUntil: 'networkidle',
+    waitUntil: 'domcontentloaded',
     timeout: 45000
   })
 
-  // Extra wait to catch any lazy-loaded requests
-  await page.waitForTimeout(3000)
+  // Wait for dynamic content to load
+  await page.waitForTimeout(8000)
+
+  const title = await page.title()
+  console.log(`Page title: "${title}"`)
+
+  const html = await page.content()
+  console.log(`Page HTML snippet: ${html.slice(0, 500)}`)
+
   await browser.close()
 
   if (!jobData) {
