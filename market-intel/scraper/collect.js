@@ -15,9 +15,8 @@ async function run() {
 
   let jobData = null
 
-  // Intercept every JSON response — grab the first one that looks like job listings
+  // Intercept every JSON response and log what we see
   page.on('response', async response => {
-    if (jobData) return
     try {
       const ct = response.headers()['content-type'] || ''
       if (!ct.includes('application/json')) return
@@ -25,14 +24,25 @@ async function run() {
       const body = await response.json().catch(() => null)
       if (!body) return
 
-      // Support flat array or wrapped { data: [], offers: [], items: [] }
+      const preview = JSON.stringify(body).slice(0, 300)
+      console.log(`[JSON] ${response.url()}\n  ${preview}\n`)
+
+      if (jobData) return
+
+      // Support flat array or wrapped responses
       const arr = Array.isArray(body)
         ? body
-        : body.data ?? body.offers ?? body.items ?? null
+        : body.data ?? body.offers ?? body.items ?? body.results ?? null
 
-      if (Array.isArray(arr) && arr.length > 0 && arr[0]?.skills) {
-        jobData = arr
-        console.log(`Captured ${arr.length} offers from: ${response.url()}`)
+      if (Array.isArray(arr) && arr.length > 5) {
+        // Log the keys of the first item so we know the field names
+        console.log(`[CANDIDATE] ${arr.length} items, first item keys: ${Object.keys(arr[0] || {}).join(', ')}`)
+        // Check for any skill-like field
+        const first = arr[0] || {}
+        if (first.skills || first.requirements || first.technologies || first.tags || first.techStack) {
+          jobData = arr
+          console.log(`Captured ${arr.length} offers from: ${response.url()}`)
+        }
       }
     } catch {}
   })
