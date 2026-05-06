@@ -1,8 +1,6 @@
-const { chromium } = require('playwright-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-chromium.use(StealthPlugin())
+const { chromium } = require('playwright')
 
-const WORKER_URL    = process.env.WORKER_URL
+const WORKER_URL     = process.env.WORKER_URL
 const COLLECT_SECRET = process.env.COLLECT_SECRET
 
 if (!WORKER_URL || !COLLECT_SECRET) {
@@ -13,16 +11,22 @@ if (!WORKER_URL || !COLLECT_SECRET) {
 async function run() {
   console.log('Launching browser...')
   const browser = await chromium.launch({ headless: true })
+
   const context = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     viewport: { width: 1280, height: 800 },
-    locale: 'en-US'
+    locale: 'en-US',
+    extraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' }
   })
-  const page = await context.newPage()
 
+  // Hide webdriver flag
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+  })
+
+  const page = await context.newPage()
   let jobData = null
 
-  // Intercept every JSON response and log what we see
   page.on('response', async response => {
     try {
       const ct = response.headers()['content-type'] || ''
@@ -31,43 +35,53 @@ async function run() {
       const body = await response.json().catch(() => null)
       if (!body) return
 
-      const preview = JSON.stringify(body).slice(0, 300)
-      console.log(`[JSON] ${response.url()}\n  ${preview}\n`)
+      const preview = JSON.stringify(body).slice(0, 200)
+      console.log(`[JSON] ${response.url()}\n  preview: ${preview}`)
 
       if (jobData) return
 
-      // Support flat array or wrapped responses
       const arr = Array.isArray(body)
         ? body
         : body.data ?? body.offers ?? body.items ?? body.results ?? null
 
       if (Array.isArray(arr) && arr.length > 5) {
-        // Log the keys of the first item so we know the field names
-        console.log(`[CANDIDATE] ${arr.length} items, first item keys: ${Object.keys(arr[0] || {}).join(', ')}`)
-        // Check for any skill-like field
+        const keys = Object.keys(arr[0] || {}).join(', ')
+        console.log(`[CANDIDATE] ${arr.length} items, keys: ${keys}`)
         const first = arr[0] || {}
         if (first.skills || first.requirements || first.technologies || first.tags || first.techStack) {
           jobData = arr
-          console.log(`Captured ${arr.length} offers from: ${response.url()}`)
+          console.log(`Captured ${arr.length} offers`)
         }
       }
-    } catch {}
+    } catch (e) {
+      console.log(`[response handler error] ${e.message}`)
+    }
   })
 
-  console.log('Navigating to JustJoin.it product management listings...')
-  await page.goto('https://justjoin.it/job-offers/product-management', {
-    waitUntil: 'domcontentloaded',
-    timeout: 45000
-  })
+  console.log('Navigating...')
+  try {
+    await page.goto('https://justjoin.it/job-offers/product-management', {
+      waitUntil: 'domcontentloaded',
+      timeout: 45000
+    })
+    console.log('Navigation complete')
+  } catch (e) {
+    console.log(`Navigation error: ${e.message}`)
+  }
 
-  // Wait for dynamic content to load
-  await page.waitForTimeout(8000)
+  console.log('Waiting for dynamic content...')
+  await new Promise(r => setTimeout(r, 8000))
 
-  const title = await page.title()
-  console.log(`Page title: "${title}"`)
+  console.log(`Page title: "${await page.title().catch(() => 'error')}"`)
 
-  const html = await page.content()
-  console.log(`Page HTML snippet: ${html.slice(0, 500)}`)
+  // Also check for __NEXT_DATA__ embedded in the page
+  const nextData = await page.evaluate(() => {
+    const el = document.getElementById('__NEXT_DATA__')
+    return el ? el.textContent.slice(0, 1000) : null
+  }).catch(() => null)
+
+  if (nextData) console.log(`__NEXT_DATA__ found: ${nextData}`)
+  else console.log('No __NEXT_DATA__ found')
 
   await browser.close()
 
@@ -76,7 +90,6 @@ async function run() {
   }
 
   console.log(`Processing ${jobData.length} offers...`)
-
   const skillCounts = {}
   for (const offer of jobData) {
     for (const skill of (offer.skills || [])) {
@@ -85,34 +98,17 @@ async function run() {
     }
   }
 
-  const skillCount = Object.keys(skillCounts).length
-  console.log(`Found ${skillCount} unique skills`)
-
-  if (skillCount === 0) {
-    throw new Error('No skills found in captured data — check response structure')
-  }
-
-  console.log('Top 10 skills found:',
-    Object.entries(skillCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([s, c]) => `${s}(${c})`)
-      .join(', ')
-  )
+  console.log(`Found ${Object.keys(skillCounts).length} unique skills`)
+  console.log('Top skills:', Object.entries(skillCounts).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s,c])=>`${s}(${c})`).join(', '))
 
   console.log('Sending to Worker...')
   const res = await fetch(WORKER_URL + '/collect', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Collect-Secret': COLLECT_SECRET
-    },
+    headers: { 'Content-Type': 'application/json', 'X-Collect-Secret': COLLECT_SECRET },
     body: JSON.stringify({ skills: skillCounts })
   })
-
   const result = await res.json().catch(() => ({ ok: false, error: `HTTP ${res.status}` }))
   console.log('Worker response:', JSON.stringify(result))
-
   if (!result.ok) throw new Error(`Worker rejected data: ${result.error}`)
   console.log('Done.')
 }

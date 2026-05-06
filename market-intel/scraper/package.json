@@ -5,8 +5,6 @@
     "collect": "node collect.js"
   },
   "dependencies": {
-    "playwright-extra": "^4.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "playwright": "^1.44.0"
   }
 }
