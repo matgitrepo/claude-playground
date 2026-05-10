@@ -9,8 +9,9 @@ if (!SERPAPI_KEY || !WORKER_URL || !COLLECT_SECRET) {
 
 // Queries to run — results are pooled together
 const QUERIES = [
-  'product manager',
-  'product owner'
+  'product manager Warsaw',
+  'product owner Warsaw',
+  'product manager Krakow',
 ]
 
 // Skill keywords to match against job text (lowercase)
@@ -41,7 +42,6 @@ async function fetchJobs(query) {
   url.searchParams.set('engine', 'google_jobs')
   url.searchParams.set('q', query)
   url.searchParams.set('api_key', SERPAPI_KEY)
-  url.searchParams.set('location', 'Poland')
   url.searchParams.set('hl', 'en')
 
   const res = await fetch(url.toString())
