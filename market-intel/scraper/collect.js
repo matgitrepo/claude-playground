@@ -1,105 +1,98 @@
-const { chromium } = require('playwright')
-
+const SERPAPI_KEY    = process.env.SERPAPI_KEY
 const WORKER_URL     = process.env.WORKER_URL
 const COLLECT_SECRET = process.env.COLLECT_SECRET
 
-if (!WORKER_URL || !COLLECT_SECRET) {
-  console.error('Missing WORKER_URL or COLLECT_SECRET env vars')
+if (!SERPAPI_KEY || !WORKER_URL || !COLLECT_SECRET) {
+  console.error('Missing SERPAPI_KEY, WORKER_URL or COLLECT_SECRET env vars')
   process.exit(1)
 }
 
+// Queries to run — results are pooled together
+const QUERIES = [
+  'product manager Poland',
+  'product owner Poland'
+]
+
+// Skill keywords to match against job text (lowercase)
+const SKILL_KEYWORDS = [
+  // Tools
+  'jira', 'confluence', 'figma', 'miro', 'trello', 'asana', 'notion', 'slack',
+  'tableau', 'mixpanel', 'amplitude', 'google analytics', 'looker', 'power bi', 'excel',
+  'sql', 'python', 'r', 'snowflake', 'dbt',
+  // Methodologies
+  'agile', 'scrum', 'kanban', 'safe', 'lean', 'design thinking', 'shape up',
+  // PM skills
+  'product strategy', 'roadmap', 'roadmapping', 'user research', 'a/b testing',
+  'data analysis', 'stakeholder management', 'prioritization', 'go-to-market',
+  'competitive analysis', 'product discovery', 'user stories', 'sprint planning',
+  'backlog', 'okrs', 'kpis', 'metrics', 'growth', 'retention', 'conversion',
+  'customer journey', 'personas', 'mvp', 'product vision', 'product led growth',
+  // Design
+  'ux', 'ui', 'wireframing', 'prototyping', 'user testing', 'usability',
+  // Domain
+  'b2b', 'b2c', 'saas', 'api', 'mobile', 'e-commerce', 'marketplace',
+  'fintech', 'healthtech', 'edtech', 'enterprise', 'platform',
+  // Communication
+  'stakeholders', 'cross-functional', 'leadership', 'communication', 'presentation'
+]
+
+async function fetchJobs(query) {
+  const url = new URL('https://serpapi.com/search.json')
+  url.searchParams.set('engine', 'google_jobs')
+  url.searchParams.set('q', query)
+  url.searchParams.set('api_key', SERPAPI_KEY)
+  url.searchParams.set('hl', 'en')
+  url.searchParams.set('gl', 'pl')
+  url.searchParams.set('chips', 'date_posted:month')
+
+  const res = await fetch(url.toString())
+  if (!res.ok) throw new Error(`SerpAPI error ${res.status}: ${await res.text()}`)
+  const data = await res.json()
+  return data.jobs_results || []
+}
+
+function extractSkills(job) {
+  // Combine all text sources
+  const parts = [job.title || '', job.description || '']
+  for (const highlight of (job.job_highlights || [])) {
+    parts.push(...(highlight.items || []))
+  }
+  const text = parts.join(' ').toLowerCase()
+
+  return SKILL_KEYWORDS.filter(skill => text.includes(skill))
+}
+
 async function run() {
-  console.log('Launching browser...')
-  const browser = await chromium.launch({ headless: true })
+  const allJobs = []
 
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 800 },
-    locale: 'en-US',
-    extraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' }
-  })
-
-  // Hide webdriver flag
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
-  })
-
-  const page = await context.newPage()
-  let jobData = null
-
-  page.on('response', async response => {
-    try {
-      const ct = response.headers()['content-type'] || ''
-      if (!ct.includes('application/json')) return
-
-      const body = await response.json().catch(() => null)
-      if (!body) return
-
-      const preview = JSON.stringify(body).slice(0, 200)
-      console.log(`[JSON] ${response.url()}\n  preview: ${preview}`)
-
-      if (jobData) return
-
-      const arr = Array.isArray(body)
-        ? body
-        : body.data ?? body.offers ?? body.items ?? body.results ?? null
-
-      if (Array.isArray(arr) && arr.length > 5) {
-        const keys = Object.keys(arr[0] || {}).join(', ')
-        console.log(`[CANDIDATE] ${arr.length} items, keys: ${keys}`)
-        const first = arr[0] || {}
-        if (first.skills || first.requirements || first.technologies || first.tags || first.techStack) {
-          jobData = arr
-          console.log(`Captured ${arr.length} offers`)
-        }
-      }
-    } catch (e) {
-      console.log(`[response handler error] ${e.message}`)
-    }
-  })
-
-  console.log('Navigating...')
-  try {
-    await page.goto('https://justjoin.it/job-offers/product-management', {
-      waitUntil: 'domcontentloaded',
-      timeout: 45000
-    })
-    console.log('Navigation complete')
-  } catch (e) {
-    console.log(`Navigation error: ${e.message}`)
+  for (const query of QUERIES) {
+    console.log(`Fetching: "${query}"...`)
+    const jobs = await fetchJobs(query)
+    console.log(`  Got ${jobs.length} results`)
+    allJobs.push(...jobs)
   }
 
-  console.log('Waiting for dynamic content...')
-  await new Promise(r => setTimeout(r, 8000))
+  // Deduplicate by title + company
+  const seen = new Set()
+  const uniqueJobs = allJobs.filter(job => {
+    const key = `${job.title}|${job.company_name}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 
-  console.log(`Page title: "${await page.title().catch(() => 'error')}"`)
+  console.log(`Total unique jobs: ${uniqueJobs.length}`)
 
-  // Also check for __NEXT_DATA__ embedded in the page
-  const nextData = await page.evaluate(() => {
-    const el = document.getElementById('__NEXT_DATA__')
-    return el ? el.textContent.slice(0, 1000) : null
-  }).catch(() => null)
-
-  if (nextData) console.log(`__NEXT_DATA__ found: ${nextData}`)
-  else console.log('No __NEXT_DATA__ found')
-
-  await browser.close()
-
-  if (!jobData) {
-    throw new Error('Could not intercept job listing data. JustJoin.it may have changed their API.')
-  }
-
-  console.log(`Processing ${jobData.length} offers...`)
+  // Count skills
   const skillCounts = {}
-  for (const offer of jobData) {
-    for (const skill of (offer.skills || [])) {
-      const name = skill.name?.trim().toLowerCase()
-      if (name) skillCounts[name] = (skillCounts[name] || 0) + 1
+  for (const job of uniqueJobs) {
+    for (const skill of extractSkills(job)) {
+      skillCounts[skill] = (skillCounts[skill] || 0) + 1
     }
   }
 
-  console.log(`Found ${Object.keys(skillCounts).length} unique skills`)
-  console.log('Top skills:', Object.entries(skillCounts).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s,c])=>`${s}(${c})`).join(', '))
+  const sorted = Object.entries(skillCounts).sort((a, b) => b[1] - a[1])
+  console.log('Top 10 skills:', sorted.slice(0, 10).map(([s, c]) => `${s}(${c})`).join(', '))
 
   console.log('Sending to Worker...')
   const res = await fetch(WORKER_URL + '/collect', {

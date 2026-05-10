@@ -3,7 +3,7 @@ name: Market Intel — Collect Skills
 on:
   schedule:
     - cron: '0 2 * * *'   # Daily at 02:00 UTC
-  workflow_dispatch:        # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:        # Manual trigger from GitHub Actions tab
 
 jobs:
   collect:
@@ -15,16 +15,9 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: market-intel/scraper
-
-      - name: Install Playwright browser
-        run: npx playwright install chromium --with-deps
-        working-directory: market-intel/scraper
-
-      - name: Collect skills from JustJoin.it
+      - name: Collect skills via SerpAPI
         env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
           WORKER_URL: ${{ secrets.MARKET_INTEL_WORKER_URL }}
           COLLECT_SECRET: ${{ secrets.MARKET_INTEL_COLLECT_SECRET }}
         run: node collect.js
