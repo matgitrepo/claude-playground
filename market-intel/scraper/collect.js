@@ -47,6 +47,11 @@ async function fetchJobs(query) {
   const res = await fetch(url.toString())
   if (!res.ok) throw new Error(`SerpAPI error ${res.status}: ${await res.text()}`)
   const data = await res.json()
+  if (!data.jobs_results?.length) {
+    console.log(`  Full response keys: ${Object.keys(data).join(', ')}`)
+    if (data.error) console.log(`  Error: ${data.error}`)
+    if (data.search_information) console.log(`  Search info: ${JSON.stringify(data.search_information)}`)
+  }
   return data.jobs_results || []
 }
 
