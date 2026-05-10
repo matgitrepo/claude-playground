@@ -9,7 +9,9 @@ if (!SERPAPI_KEY || !WORKER_URL || !COLLECT_SECRET) {
 
 // Queries to run — results are pooled together
 const QUERIES = [
-  'product manager London',
+  'product manager London Berlin Amsterdam',
+  'product owner London Berlin Amsterdam',
+  'product manager Paris Stockholm Barcelona',
 ]
 
 // Skill keywords to match against job text (lowercase)
