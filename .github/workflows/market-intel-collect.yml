@@ -1,4 +1,4 @@
-name: Market Intel — Collect Skills
+name: Market Intel — Collect Skills from SerpAPI
 
 on:
   schedule:
