@@ -9,8 +9,8 @@ if (!SERPAPI_KEY || !WORKER_URL || !COLLECT_SECRET) {
 
 // Queries to run — results are pooled together
 const QUERIES = [
-  'product manager Poland',
-  'product owner Poland'
+  'product manager',
+  'product owner'
 ]
 
 // Skill keywords to match against job text (lowercase)
@@ -41,9 +41,8 @@ async function fetchJobs(query) {
   url.searchParams.set('engine', 'google_jobs')
   url.searchParams.set('q', query)
   url.searchParams.set('api_key', SERPAPI_KEY)
+  url.searchParams.set('location', 'Poland')
   url.searchParams.set('hl', 'en')
-  url.searchParams.set('gl', 'pl')
-  // no date filter — maximise results on free tier
 
   const res = await fetch(url.toString())
   if (!res.ok) throw new Error(`SerpAPI error ${res.status}: ${await res.text()}`)
