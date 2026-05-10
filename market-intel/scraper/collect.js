@@ -19,7 +19,7 @@ const SKILL_KEYWORDS = [
   // Tools
   'jira', 'confluence', 'figma', 'miro', 'trello', 'asana', 'notion', 'slack',
   'tableau', 'mixpanel', 'amplitude', 'google analytics', 'looker', 'power bi', 'excel',
-  'sql', 'python', 'r', 'snowflake', 'dbt',
+  'sql', 'python', 'snowflake', 'dbt',
   // Methodologies
   'agile', 'scrum', 'kanban', 'safe', 'lean', 'design thinking', 'shape up',
   // PM skills
@@ -63,7 +63,10 @@ function extractSkills(job) {
   }
   const text = parts.join(' ').toLowerCase()
 
-  return SKILL_KEYWORDS.filter(skill => text.includes(skill))
+  return SKILL_KEYWORDS.filter(skill => {
+    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(text)
+  })
 }
 
 async function run() {
