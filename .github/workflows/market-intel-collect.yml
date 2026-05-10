@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Collect skills via SerpAPI
+      - name: Market Intel - Collect skills from SERPAPI
         env:
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
           WORKER_URL: ${{ secrets.MARKET_INTEL_WORKER_URL }}
