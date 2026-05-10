@@ -43,7 +43,7 @@ async function fetchJobs(query) {
   url.searchParams.set('api_key', SERPAPI_KEY)
   url.searchParams.set('hl', 'en')
   url.searchParams.set('gl', 'pl')
-  url.searchParams.set('chips', 'date_posted:month')
+  // no date filter — maximise results on free tier
 
   const res = await fetch(url.toString())
   if (!res.ok) throw new Error(`SerpAPI error ${res.status}: ${await res.text()}`)
