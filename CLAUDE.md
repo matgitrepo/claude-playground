@@ -86,17 +86,19 @@ claude-playground/
 - Ctrl+Enter submits the topic
 
 ### Project: Market Intel (`market-intel/index.html`)
-- Shows top 5 trending skills in product jobs in Poland (JustJoin.it data)
-- Worker cron runs daily at 02:00 UTC, fetches JustJoin.it, stores skill counts in Cloudflare D1
+- Shows top 5 trending skills in London product jobs (PM/PO/Head of Product)
+- Data source: SerpAPI Google Jobs (free tier: 100 searches/month)
+- GitHub Action (`market-intel-collect.yml`) runs daily at 02:00 UTC, calls SerpAPI, stores skill counts in Cloudflare D1
+- Skill extraction: keyword matching with word boundaries against curated PM skills list in `scraper/collect.js`
 - Trends = last 30 days vs previous 30 days; shows top skills by count until 30 days of data
-- No API keys needed for data collection (JustJoin.it is public)
-- `CONFIG.WORKER_URL` in `index.html` must point to the deployed Worker
+- `CONFIG.WORKER_URL` in `index.html` — points to deployed Cloudflare Worker
+- Worker deployed at: `https://market-intel-worker.claude-playground.workers.dev`
 - Worker deployment: see `market-intel/worker/` — uses Wrangler CLI
   - `wrangler d1 create market-intel` — create the D1 database
-  - `wrangler d1 execute market-intel --file=schema.sql` — run migrations
-  - `wrangler secret put COLLECT_SECRET` — secret for manual `/collect` trigger
+  - `wrangler d1 execute market-intel --file=schema.sql --remote` — run migrations
+  - `wrangler secret put COLLECT_SECRET` — secret for `/collect` endpoint
   - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
-- Categories tracked: product-management, project-management (from `PRODUCT_CATEGORIES` in worker.js)
+- GitHub Actions secrets required: `SERPAPI_KEY`, `MARKET_INTEL_WORKER_URL`, `MARKET_INTEL_COLLECT_SECRET`
 
 ### Running
 Open any project's `index.html` directly in a browser — no server or build step needed.
