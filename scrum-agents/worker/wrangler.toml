@@ -1,0 +1,14 @@
+name = "scrum-agents-worker"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+[vars]
+ALLOWED_ORIGIN = "null"
+DAILY_LIMIT = "100"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "e60c23241f63496093286049ef0896de"
+
+# Secrets — set via:
+#   wrangler secret put ANTHROPIC_API_KEY

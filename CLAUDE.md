@@ -34,6 +34,11 @@ claude-playground/
 │       ├── worker.js
 │       ├── schema.sql
 │       └── wrangler.toml
+├── scrum-agents/
+│   ├── index.html
+│   └── worker/
+│       ├── worker.js
+│       └── wrangler.toml
 └── .vscode/settings.json
 ```
 
@@ -100,6 +105,22 @@ claude-playground/
   - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
 - GitHub Actions secrets required: `SERPAPI_KEY`, `MARKET_INTEL_WORKER_URL`, `MARKET_INTEL_COLLECT_SECRET`
 
+### Project: Scrum Agents (`scrum-agents/index.html`)
+- User describes a software feature; three Claude agents (BA, Dev, QA) discuss it in structured rounds
+- BA writes user stories + acceptance criteria → Dev challenges technically → QA finds gaps and test cases
+- User can interject between any rounds via an optional text input
+- After any round, "Generate Plan" produces a structured markdown Plan of Action (Scrum Master role)
+- Agents cycle (BA → Dev → QA → BA …) if the user continues past the first three turns
+- Worker proxies Claude API calls with streaming (SSE forwarded directly, no buffering)
+- Model: `claude-sonnet-4-6` — all four roles (ba, dev, qa, summary) use the same endpoint `/chat`
+- `CONFIG.WORKER_URL` in `index.html` — points to deployed Cloudflare Worker
+- Worker deployed at: `https://scrum-agents-worker.claude-playground.workers.dev`
+- Worker deployment: see `scrum-agents/worker/` — uses Wrangler CLI
+  - `wrangler secret put ANTHROPIC_API_KEY` — stores the key securely
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+  - Rate limiting: 100 requests/day via shared `RATE_LIMIT` KV namespace (ID: `e60c23241f63496093286049ef0896de`)
+- Ctrl+Enter starts the sprint
+
 ### Running
 Open any project's `index.html` directly in a browser — no server or build step needed.
-The hiking planner, podcast generator, and market intel app require their Cloudflare Workers to be deployed first.
+The hiking planner, podcast generator, market intel, and scrum-agents apps require their Cloudflare Workers to be deployed first.

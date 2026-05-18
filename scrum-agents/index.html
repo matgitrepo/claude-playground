@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scrum Team — Multi-Agent Feature Planning</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0 }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f0f13;
+  color: #e0e0e8;
+  min-height: 100vh;
+  padding: 40px 16px 80px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+header h1 {
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+header p {
+  color: #666;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+main {
+  max-width: 740px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  background: #1a1a1f;
+  border: 1px solid #2a2a32;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+textarea {
+  width: 100%;
+  background: #111116;
+  border: 1px solid #2a2a32;
+  border-radius: 8px;
+  color: #e0e0e8;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+textarea:focus { border-color: #4a5568; }
+
+#feature-input {
+  min-height: 110px;
+  margin-bottom: 12px;
+}
+
+#inject-textarea {
+  min-height: 70px;
+  font-size: 14px;
+  margin: 10px 0 12px;
+}
+
+button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.1px;
+}
+
+button:hover:not(:disabled) { opacity: 0.85; }
+button:active:not(:disabled) { transform: scale(0.98); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+#start-btn {
+  background: #4a9eff;
+  color: #000;
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+}
+
+.kbd-hint {
+  font-size: 12px;
+  color: #555;
+  margin-top: 8px;
+}
+
+.inject-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.inject-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#continue-btn {
+  background: #4a9eff;
+  color: #000;
+  flex: 1;
+}
+
+#plan-btn {
+  background: #7c3aed;
+  color: #fff;
+  flex: 1;
+}
+
+/* Agent conversation cards */
+.agent-card {
+  border-radius: 12px;
+  border: 1px solid #2a2a32;
+  overflow: hidden;
+}
+
+.agent-header {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.agent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-body {
+  background: #1a1a1f;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #c8c8d4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 48px;
+}
+
+.agent-body.streaming::after {
+  content: "▌";
+  color: #666;
+  animation: blink 0.9s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0 }
+}
+
+/* User interjection note */
+.user-note {
+  padding: 10px 16px;
+  background: #161620;
+  border: 1px solid #2a2a32;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+}
+
+.user-note strong {
+  color: #aaa;
+  font-style: normal;
+}
+
+/* Inject panel */
+#inject-panel {
+  border-style: dashed;
+  border-color: #333340;
+}
+
+/* Plan output */
+#plan-card {
+  display: none;
+  border-color: #7c3aed44;
+}
+
+.plan-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #2a2a32;
+}
+
+.plan-header h2 {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.plan-badge {
+  background: #7c3aed22;
+  color: #a78bfa;
+  border: 1px solid #7c3aed44;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+#plan-content {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #c8c8d4;
+}
+
+#plan-content.streaming {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#plan-content.streaming::after {
+  content: "▌";
+  color: #666;
+  animation: blink 0.9s step-end infinite;
+}
+
+#plan-content h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e0e0e8;
+  margin: 24px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #2a2a32;
+}
+
+#plan-content h2:first-child { margin-top: 0; }
+
+#plan-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+#plan-content li {
+  padding: 4px 0 4px 20px;
+  position: relative;
+  color: #c8c8d4;
+}
+
+#plan-content li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #555;
+}
+
+#plan-content p { margin-bottom: 8px; }
+#plan-content strong { color: #e0e0e8; }
+#plan-content em { color: #aaa; }
+#plan-content code {
+  background: #111116;
+  border: 1px solid #2a2a32;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 13px;
+}
+
+/* Error */
+#error-box {
+  display: none;
+  background: #1f1015;
+  border: 1px solid #5c2a2a;
+  border-radius: 8px;
+  padding: 14px;
+  color: #f87171;
+  font-size: 14px;
+}
+
+/* Conversation */
+#conversation {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#conversation.visible {
+  display: flex;
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Scrum Team</h1>
+  <p>BA, Developer, and QA challenge your feature idea — then produce a plan</p>
+</header>
+
+<main>
+  <div id="input-card" class="card">
+    <textarea id="feature-input" placeholder="Describe the feature you want to build...&#10;&#10;Example: Add Google OAuth login so users don't need to create a password"></textarea>
+    <button id="start-btn">Start Sprint →</button>
+    <p class="kbd-hint">Ctrl+Enter to start</p>
+  </div>
+
+  <div id="conversation"></div>
+
+  <div id="inject-panel" class="card hidden">
+    <span class="inject-label">Your input (optional)</span>
+    <textarea id="inject-textarea" placeholder="Add context, clarify requirements, or redirect the discussion..."></textarea>
+    <div class="inject-actions">
+      <button id="continue-btn">Continue →</button>
+      <button id="plan-btn">Generate Plan</button>
+    </div>
+  </div>
+
+  <div id="plan-card" class="card">
+    <div class="plan-header">
+      <h2>Plan of Action</h2>
+      <span class="plan-badge">Sprint Output</span>
+    </div>
+    <div id="plan-content"></div>
+  </div>
+
+  <div id="error-box"></div>
+</main>
+
+<script>
+const CONFIG = {
+  WORKER_URL: "https://scrum-agents-worker.claude-playground.workers.dev"
+}
+
+const AGENTS = [
+  { role: "ba",  label: "BA",  title: "Business Analyst", color: "#4a9eff" },
+  { role: "dev", label: "Dev", title: "Senior Developer",  color: "#4ade80" },
+  { role: "qa",  label: "QA",  title: "QA Engineer",       color: "#fbbf24" }
+]
+
+let agentIndex = 0
+let messages = []
+
+const featureInput   = document.getElementById("feature-input")
+const startBtn       = document.getElementById("start-btn")
+const conversationEl = document.getElementById("conversation")
+const injectPanel    = document.getElementById("inject-panel")
+const injectTextarea = document.getElementById("inject-textarea")
+const continueBtn    = document.getElementById("continue-btn")
+const planBtn        = document.getElementById("plan-btn")
+const planCard       = document.getElementById("plan-card")
+const planContent    = document.getElementById("plan-content")
+const errorBox       = document.getElementById("error-box")
+const inputCard      = document.getElementById("input-card")
+
+featureInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.ctrlKey) startSprint()
+})
+startBtn.addEventListener("click", startSprint)
+continueBtn.addEventListener("click", continueToNext)
+planBtn.addEventListener("click", generatePlan)
+
+function startSprint() {
+  const feature = featureInput.value.trim()
+  if (!feature) { featureInput.focus(); return }
+
+  hideError()
+  agentIndex = 0
+  messages = [{ role: "user", content: `Feature request: ${feature}` }]
+
+  inputCard.style.opacity = "0.5"
+  inputCard.style.pointerEvents = "none"
+  conversationEl.innerHTML = ""
+  conversationEl.classList.add("visible")
+
+  callAgent(0)
+}
+
+function continueToNext() {
+  const inject = injectTextarea.value.trim()
+  injectPanel.classList.add("hidden")
+
+  if (inject) {
+    messages.push({ role: "user", content: inject })
+    addUserNote(inject)
+  } else {
+    messages.push({ role: "user", content: "Continue to the next team member." })
+  }
+  injectTextarea.value = ""
+
+  agentIndex = (agentIndex + 1) % AGENTS.length
+  callAgent(agentIndex)
+}
+
+async function callAgent(index) {
+  const agent = AGENTS[index]
+  const bodyEl = appendAgentCard(agent)
+  bodyEl.classList.add("streaming")
+  setButtons(false)
+  hideError()
+
+  let fullText = ""
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL + "/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agentRole: agent.role, messages })
+    }).catch(e => { throw new Error(`Could not reach worker — ${e.message}`) })
+
+    if (!res.ok) {
+      const txt = await res.text()
+      throw new Error(`Error ${res.status}: ${txt}`)
+    }
+
+    fullText = await readStream(res.body, chunk => { bodyEl.textContent = chunk })
+  } catch (e) {
+    bodyEl.classList.remove("streaming")
+    showError(e.message)
+    setButtons(true)
+    return
+  }
+
+  bodyEl.classList.remove("streaming")
+  messages.push({ role: "assistant", content: `[${agent.label} – ${agent.title}]:\n${fullText}` })
+  setButtons(true)
+  showInjectPanel()
+}
+
+async function generatePlan() {
+  const inject = injectTextarea.value.trim()
+  injectPanel.classList.add("hidden")
+  injectTextarea.value = ""
+  if (inject) addUserNote(inject)
+
+  const finalMsg = inject
+    ? `${inject}\n\nPlease now generate the Plan of Action based on the full team discussion above.`
+    : "Please generate the Plan of Action based on the team discussion above."
+
+  const summaryMessages = [...messages, { role: "user", content: finalMsg }]
+
+  setButtons(false)
+  hideError()
+  planCard.style.display = "block"
+  planContent.textContent = ""
+  planContent.classList.add("streaming")
+  planCard.scrollIntoView({ behavior: "smooth" })
+
+  let fullText = ""
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL + "/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agentRole: "summary", messages: summaryMessages })
+    }).catch(e => { throw new Error(`Could not reach worker — ${e.message}`) })
+
+    if (!res.ok) {
+      const txt = await res.text()
+      throw new Error(`Error ${res.status}: ${txt}`)
+    }
+
+    fullText = await readStream(res.body, chunk => { planContent.textContent = chunk })
+  } catch (e) {
+    planContent.classList.remove("streaming")
+    showError(e.message)
+    setButtons(true)
+    return
+  }
+
+  planContent.classList.remove("streaming")
+  planContent.innerHTML = renderMarkdown(fullText)
+}
+
+async function readStream(body, onChunk) {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buf = ""
+  let fullText = ""
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+    const lines = buf.split("\n")
+    buf = lines.pop()
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue
+      const data = line.slice(6).trim()
+      if (!data) continue
+      try {
+        const evt = JSON.parse(data)
+        if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
+          fullText += evt.delta.text
+          onChunk(fullText)
+        }
+      } catch {}
+    }
+  }
+
+  return fullText
+}
+
+function appendAgentCard(agent) {
+  const card = document.createElement("div")
+  card.className = "agent-card"
+  card.style.borderColor = agent.color + "33"
+
+  const header = document.createElement("div")
+  header.className = "agent-header"
+  header.style.background = agent.color + "14"
+  header.style.color = agent.color
+  header.innerHTML = `<span class="agent-dot" style="background:${agent.color}"></span>${agent.label} — ${agent.title}`
+
+  const body = document.createElement("div")
+  body.className = "agent-body"
+
+  card.appendChild(header)
+  card.appendChild(body)
+  conversationEl.appendChild(card)
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  return body
+}
+
+function addUserNote(text) {
+  const note = document.createElement("div")
+  note.className = "user-note"
+  note.innerHTML = `<strong>You:</strong> ${escHtml(text)}`
+  conversationEl.appendChild(note)
+}
+
+function showInjectPanel() {
+  const nextAgent = AGENTS[(agentIndex + 1) % AGENTS.length]
+  continueBtn.textContent = `Continue → ${nextAgent.label}`
+  injectPanel.classList.remove("hidden")
+  injectPanel.scrollIntoView({ behavior: "smooth", block: "nearest" })
+}
+
+function setButtons(enabled) {
+  startBtn.disabled = !enabled
+  continueBtn.disabled = !enabled
+  planBtn.disabled = !enabled
+}
+
+function showError(msg) {
+  errorBox.style.display = "block"
+  errorBox.textContent = msg
+}
+
+function hideError() {
+  errorBox.style.display = "none"
+}
+
+function escHtml(s) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+function renderMarkdown(md) {
+  const lines = md.split("\n")
+  let html = ""
+  let inList = false
+
+  for (const raw of lines) {
+    const line = raw.trimEnd()
+    if (line.startsWith("## ")) {
+      if (inList) { html += "</ul>"; inList = false }
+      html += `<h2>${escHtml(line.slice(3))}</h2>`
+    } else if (line.startsWith("### ")) {
+      if (inList) { html += "</ul>"; inList = false }
+      html += `<h3>${escHtml(line.slice(4))}</h3>`
+    } else if (/^[-*] /.test(line)) {
+      if (!inList) { html += "<ul>"; inList = true }
+      html += `<li>${applyInline(escHtml(line.slice(2)))}</li>`
+    } else if (line === "") {
+      if (inList) { html += "</ul>"; inList = false }
+    } else {
+      if (inList) { html += "</ul>"; inList = false }
+      html += `<p>${applyInline(escHtml(line))}</p>`
+    }
+  }
+  if (inList) html += "</ul>"
+  return html
+}
+
+function applyInline(s) {
+  return s
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`(.+?)`/g, "<code>$1</code>")
+}
+</script>
+</body>
+</html>
