@@ -112,7 +112,7 @@ claude-playground/
   - `wrangler d1 create market-intel` — create the D1 database
   - `wrangler d1 execute market-intel --file=schema.sql --remote` — run migrations
   - `wrangler secret put COLLECT_SECRET` — secret for `/collect` endpoint
-  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — locked to `https://matgitrepo.github.io`
 - GitHub Actions secrets required: `SERPAPI_KEY`, `MARKET_INTEL_WORKER_URL`, `MARKET_INTEL_COLLECT_SECRET`
 
 ### Project: Scrum Agents (`scrum-agents/index.html`)

@@ -3,9 +3,7 @@ main = "worker.js"
 compatibility_date = "2024-09-23"
 
 [vars]
-ALLOWED_ORIGIN = "null"
-# When ready to deploy publicly:
-# ALLOWED_ORIGIN = "https://matgitrepo.github.io"
+ALLOWED_ORIGIN = "https://matgitrepo.github.io"
 
 [[d1_databases]]
 binding = "DB"
