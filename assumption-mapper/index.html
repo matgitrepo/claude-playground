@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assumption Mapper</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3347;
+    --text: #e8eaf0;
+    --muted: #7b82a0;
+    --accent: #6366f1;
+    --c-des: #3b82f6;
+    --c-fea: #f59e0b;
+    --c-via: #f43f5e;
+    --c-des-bg: rgba(59,130,246,0.1);
+    --c-fea-bg: rgba(245,158,11,0.1);
+    --c-via-bg: rgba(244,63,94,0.1);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  .container { width: 100%; max-width: 940px; }
+
+  .header { text-align: center; margin-bottom: 10px; }
+  .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; }
+  .header p { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+
+  /* Input screen */
+  #input-screen { margin-top: 36px; }
+
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .input-card label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 14px 16px;
+    resize: vertical;
+    width: 100%;
+    min-height: 130px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .hint { font-size: 0.75rem; color: var(--muted); }
+
+  button {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 11px 24px;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  button:hover:not(:disabled) { background: #4f52d9; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+  .btn-secondary:hover { background: var(--surface2); color: var(--text); }
+
+  /* Loading */
+  #loading-screen { display: none; flex-direction: column; align-items: center; gap: 18px; margin-top: 80px; }
+  .spinner-large {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-screen p { color: var(--muted); font-size: 0.95rem; }
+
+  /* Results */
+  #results-screen { display: none; flex-direction: column; gap: 36px; margin-top: 32px; }
+
+  .results-header { display: flex; justify-content: space-between; align-items: center; }
+  .results-header h2 { font-size: 1.1rem; font-weight: 600; }
+
+  /* Legend */
+  .legend { display: flex; gap: 18px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* 2x2 Grid */
+  .grid-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .grid-title { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+
+  .grid-outer { display: flex; align-items: stretch; gap: 12px; }
+
+  .y-axis-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .grid-and-x { display: flex; flex-direction: column; flex: 1; }
+
+  .grid-plot {
+    position: relative;
+    width: 100%;
+    padding-bottom: 66%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .grid-inner { position: absolute; inset: 0; }
+
+  /* Quadrant tint — top-left is danger: high impact, low confidence */
+  .quadrant-danger {
+    position: absolute;
+    left: 0; top: 0; width: 50%; height: 50%;
+    background: rgba(244,63,94,0.06);
+    pointer-events: none;
+  }
+  .quadrant-label {
+    position: absolute;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(244,63,94,0.5);
+    pointer-events: none;
+  }
+
+  /* Grid lines */
+  .grid-line-v {
+    position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 1px; background: var(--border);
+    pointer-events: none;
+  }
+  .grid-line-h {
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 1px; background: var(--border);
+    pointer-events: none;
+  }
+
+  /* Dots */
+  .dot {
+    position: absolute;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    transform: translate(-50%, 50%);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; font-weight: 700; color: #fff;
+    z-index: 2;
+  }
+  .dot:hover, .dot.active {
+    transform: translate(-50%, 50%) scale(1.4);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+    z-index: 10;
+  }
+
+  .x-axis { display: flex; justify-content: space-between; margin-top: 8px; padding: 0 0; }
+  .x-axis span { font-size: 0.75rem; color: var(--muted); }
+
+  /* Cards */
+  .cards-section { display: flex; flex-direction: column; gap: 20px; }
+  .category-group h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+  .assumption-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    border-left-width: 3px;
+  }
+  .assumption-card:hover, .assumption-card.active {
+    background: var(--surface2);
+  }
+  .assumption-card.des { border-left-color: var(--c-des); }
+  .assumption-card.fea { border-left-color: var(--c-fea); }
+  .assumption-card.via { border-left-color: var(--c-via); }
+  .assumption-card.active.des { border-color: var(--c-des); }
+  .assumption-card.active.fea { border-color: var(--c-fea); }
+  .assumption-card.active.via { border-color: var(--c-via); }
+
+  .card-id {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .card-id.des { color: var(--c-des); }
+  .card-id.fea { color: var(--c-fea); }
+  .card-id.via { color: var(--c-via); }
+
+  .card-statement { font-size: 0.9rem; line-height: 1.5; margin-bottom: 12px; }
+
+  .card-metrics { display: flex; gap: 14px; margin-bottom: 12px; }
+  .metric { display: flex; flex-direction: column; gap: 4px; }
+  .metric-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric-dots { display: flex; gap: 3px; }
+  .mdot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--border);
+  }
+  .mdot.on.des { background: var(--c-des); }
+  .mdot.on.fea { background: var(--c-fea); }
+  .mdot.on.via { background: var(--c-via); }
+
+  .card-experiment {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .card-experiment strong { color: var(--text); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Assumption Mapper</h1>
+    <p>Surface the riskiest bets behind your feature idea before you build.</p>
+  </div>
+
+  <!-- Input -->
+  <div id="input-screen">
+    <div class="input-card">
+      <label for="feature-input">Describe your feature idea</label>
+      <textarea id="feature-input" placeholder="e.g. A feature that lets users set recurring payment reminders via WhatsApp. The idea is that users forget to pay bills, and a simple message nudge with a one-tap payment link would reduce late fees..."></textarea>
+      <div class="btn-row">
+        <span class="hint">Ctrl+Enter to map</span>
+        <button id="map-btn" onclick="mapAssumptions()">Map Assumptions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="spinner-large"></div>
+    <p>Claude is mapping your assumptions...</p>
+  </div>
+
+  <!-- Results -->
+  <div id="results-screen">
+    <div class="results-header">
+      <h2>Assumption Map</h2>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-des)"></div>Desirability</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-fea)"></div>Feasibility</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-via)"></div>Viability</div>
+        </div>
+        <button class="btn-secondary" onclick="reset()">Start Over</button>
+      </div>
+    </div>
+
+    <!-- 2x2 -->
+    <div class="grid-wrapper">
+      <div class="grid-title">Risk Quadrant — Confidence vs. Impact if Wrong</div>
+      <div class="grid-outer">
+        <div class="y-axis-label">
+          <span>Low</span>
+          <span>Impact if Wrong</span>
+          <span>High</span>
+        </div>
+        <div class="grid-and-x">
+          <div class="grid-plot">
+            <div class="grid-inner" id="grid-inner">
+              <div class="quadrant-danger"></div>
+              <div class="quadrant-label" style="top:6px;left:8px;">Validate First</div>
+              <div class="grid-line-v"></div>
+              <div class="grid-line-h"></div>
+            </div>
+          </div>
+          <div class="x-axis">
+            <span>Low Confidence</span>
+            <span>High Confidence</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="cards-section" id="cards-section"></div>
+  </div>
+</div>
+
+<script>
+const CONFIG = { WORKER_URL: "http://localhost:8787" }
+
+const CAT_CLASS = { Desirability: "des", Feasibility: "fea", Viability: "via" }
+const CAT_COLOR = { Desirability: "#3b82f6", Feasibility: "#f59e0b", Viability: "#f43f5e" }
+
+let assumptions = []
+let activeId = null
+
+async function mapAssumptions() {
+  const input = document.getElementById("feature-input")
+  const idea = input.value.trim()
+  if (!idea) return
+
+  document.getElementById("input-screen").style.display = "none"
+  document.getElementById("results-screen").style.display = "none"
+  const loading = document.getElementById("loading-screen")
+  loading.style.display = "flex"
+
+  try {
+    const res = await fetch(`${CONFIG.WORKER_URL}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ featureIdea: idea })
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || `HTTP ${res.status}`)
+    }
+    const data = await res.json()
+    assumptions = data.assumptions || []
+    if (!assumptions.length) throw new Error("No assumptions returned")
+    renderResults()
+  } catch (e) {
+    alert(`Error: ${e.message}`)
+    loading.style.display = "none"
+    document.getElementById("input-screen").style.display = "block"
+  }
+}
+
+function renderResults() {
+  document.getElementById("loading-screen").style.display = "none"
+  document.getElementById("results-screen").style.display = "flex"
+
+  renderGrid()
+  renderCards()
+}
+
+function renderGrid() {
+  const grid = document.getElementById("grid-inner")
+  // Remove old dots
+  grid.querySelectorAll(".dot").forEach(d => d.remove())
+
+  assumptions.forEach(a => {
+    const cls = CAT_CLASS[a.category] || "des"
+    const color = CAT_COLOR[a.category] || "#6366f1"
+
+    // x: confidence 1-5 → left 8%–92%
+    // y: impact 1-5 → bottom 8%–92% (high impact = top = low bottom %)
+    const xPct = 8 + ((a.confidence - 1) / 4) * 84
+    const yPct = 8 + ((a.impact - 1) / 4) * 84  // bottom %
+
+    const dot = document.createElement("div")
+    dot.className = `dot ${cls}`
+    dot.id = `dot-${a.id}`
+    dot.style.background = color
+    dot.style.left = `${xPct}%`
+    dot.style.bottom = `${yPct}%`
+    dot.textContent = a.id
+    dot.title = a.statement
+    dot.addEventListener("click", () => activate(a.id))
+    grid.appendChild(dot)
+  })
+}
+
+function renderCards() {
+  const section = document.getElementById("cards-section")
+  section.innerHTML = ""
+
+  const groups = {}
+  assumptions.forEach(a => {
+    if (!groups[a.category]) groups[a.category] = []
+    groups[a.category].push(a)
+  })
+
+  const order = ["Desirability", "Feasibility", "Viability"]
+  order.forEach(cat => {
+    if (!groups[cat]) return
+    const cls = CAT_CLASS[cat]
+    const color = CAT_COLOR[cat]
+
+    const group = document.createElement("div")
+    group.className = "category-group"
+    group.innerHTML = `<h3 style="color:${color}">${cat}</h3>`
+
+    const grid = document.createElement("div")
+    grid.className = "cards-grid"
+
+    groups[cat].forEach(a => {
+      const card = document.createElement("div")
+      card.className = `assumption-card ${cls}`
+      card.id = `card-${a.id}`
+      card.innerHTML = `
+        <div class="card-id ${cls}">#${a.id} ${cat}</div>
+        <div class="card-statement">${escapeHtml(a.statement)}</div>
+        <div class="card-metrics">
+          <div class="metric">
+            <div class="metric-label">Confidence</div>
+            <div class="metric-dots">${dots(a.confidence, cls)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Impact if Wrong</div>
+            <div class="metric-dots">${dots(a.impact, cls)}</div>
+          </div>
+        </div>
+        <div class="card-experiment">
+          <strong>Experiment</strong>
+          ${escapeHtml(a.experiment)}
+        </div>
+      `
+      card.addEventListener("click", () => activate(a.id))
+      grid.appendChild(card)
+    })
+
+    group.appendChild(grid)
+    section.appendChild(group)
+  })
+}
+
+function dots(val, cls) {
+  return Array.from({ length: 5 }, (_, i) =>
+    `<div class="mdot ${i < val ? "on " + cls : ""}"></div>`
+  ).join("")
+}
+
+function activate(id) {
+  if (activeId !== null) {
+    document.getElementById(`dot-${activeId}`)?.classList.remove("active")
+    document.getElementById(`card-${activeId}`)?.classList.remove("active")
+  }
+  activeId = id
+  const dot = document.getElementById(`dot-${id}`)
+  const card = document.getElementById(`card-${id}`)
+  dot?.classList.add("active")
+  card?.classList.add("active")
+  card?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+}
+
+function reset() {
+  assumptions = []
+  activeId = null
+  document.getElementById("results-screen").style.display = "none"
+  document.getElementById("input-screen").style.display = "block"
+  document.getElementById("feature-input").value = ""
+  document.getElementById("grid-inner").querySelectorAll(".dot").forEach(d => d.remove())
+  document.getElementById("cards-section").innerHTML = ""
+}
+
+function escapeHtml(t) {
+  return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.key === "Enter") {
+    if (document.getElementById("input-screen").style.display !== "none") {
+      mapAssumptions()
+    }
+  }
+})
+</script>
+</body>
+</html>

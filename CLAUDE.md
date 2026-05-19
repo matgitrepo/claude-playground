@@ -39,6 +39,16 @@ claude-playground/
 │   └── worker/
 │       ├── worker.js
 │       └── wrangler.toml
+├── pm-interview-coach/
+│   ├── index.html
+│   └── worker/
+│       ├── worker.js
+│       └── wrangler.toml
+├── assumption-mapper/
+│   ├── index.html
+│   └── worker/
+│       ├── worker.js
+│       └── wrangler.toml
 └── .vscode/settings.json
 ```
 
@@ -121,6 +131,29 @@ claude-playground/
   - Rate limiting: 100 requests/day via shared `RATE_LIMIT` KV namespace (ID: `e60c23241f63496093286049ef0896de`)
 - Ctrl+Enter starts the sprint
 
+### Project: PM Interview Coach (`pm-interview-coach/index.html`)
+- User picks an interview type (Product Sense, Prioritization, Estimation); Claude plays senior PM interviewer
+- 3-round structure: opening question → 2 follow-ups → structured feedback (What Landed / What Was Weak / What a Strong Answer Includes)
+- Claude responses stream via SSE; full message history sent each turn for context
+- Model: `claude-sonnet-4-6` — single `/chat` endpoint, `phase` param controls prompt (question / followup / feedback)
+- `CONFIG.WORKER_URL` in `index.html` — points to deployed Cloudflare Worker
+- Worker deployment: see `pm-interview-coach/worker/` — uses Wrangler CLI
+  - `wrangler secret put ANTHROPIC_API_KEY` — stores the key securely
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+- Ctrl+Enter submits answers
+
+### Project: Assumption Mapper (`assumption-mapper/index.html`)
+- User describes a feature idea; Claude identifies 6–10 assumptions across Desirability / Feasibility / Viability
+- Each assumption has: statement, category, confidence (1–5), impact if wrong (1–5), suggested lean experiment
+- Visualizes assumptions as dots on a CSS-based 2x2 grid (x=confidence, y=impact); top-left quadrant ("Validate First") tinted red
+- Below the grid: assumption cards grouped by category, color-coded (blue/amber/rose); clicking dot↔card cross-highlights
+- Model: `claude-sonnet-4-6` — single `/analyze` endpoint, returns JSON (non-streaming)
+- `CONFIG.WORKER_URL` in `index.html` — points to deployed Cloudflare Worker
+- Worker deployment: see `assumption-mapper/worker/` — uses Wrangler CLI
+  - `wrangler secret put ANTHROPIC_API_KEY` — stores the key securely
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+- Ctrl+Enter submits the feature idea
+
 ### Running
 Open any project's `index.html` directly in a browser — no server or build step needed.
-The hiking planner, podcast generator, market intel, and scrum-agents apps require their Cloudflare Workers to be deployed first.
+The hiking planner, podcast generator, market intel, scrum-agents, pm-interview-coach, and assumption-mapper apps require their Cloudflare Workers to be deployed first.

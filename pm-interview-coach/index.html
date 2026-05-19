@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Interview Coach</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3347;
+    --text: #e8eaf0;
+    --muted: #7b82a0;
+    --accent: #6366f1;
+    --accent-hover: #4f52d9;
+    --green: #22c55e;
+    --red: #f43f5e;
+    --amber: #f59e0b;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  .container { width: 100%; max-width: 700px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 48px; }
+  .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; }
+  .header p { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+
+  /* Start screen */
+  #start-screen { display: flex; flex-direction: column; gap: 16px; }
+
+  .type-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .type-card:hover { border-color: var(--accent); background: var(--surface2); }
+  .type-card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; }
+  .type-card p { color: var(--muted); font-size: 0.875rem; line-height: 1.5; }
+  .type-card .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .badge-ps { background: #1e2a4a; color: #818cf8; }
+  .badge-pr { background: #1a2e1a; color: #4ade80; }
+  .badge-es { background: #2d1f0e; color: #fbbf24; }
+
+  /* Interview screen */
+  #interview-screen { display: none; flex-direction: column; gap: 0; }
+
+  .interview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .interview-header h2 { font-size: 1rem; font-weight: 600; }
+  .round-indicator { font-size: 0.8rem; color: var(--muted); }
+
+  .messages { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .msg-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .msg-bubble {
+    padding: 16px 18px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .msg-interviewer .msg-label { color: var(--accent); }
+  .msg-interviewer .msg-bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+  }
+  .msg-user .msg-label { color: var(--muted); text-align: right; }
+  .msg-user .msg-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    align-self: stretch;
+  }
+
+  .streaming-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .answer-area { display: flex; flex-direction: column; gap: 12px; }
+  textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 14px 16px;
+    resize: none;
+    width: 100%;
+    min-height: 120px;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-row { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+  .hint { font-size: 0.75rem; color: var(--muted); }
+
+  button {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 22px;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--accent-hover); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-secondary:hover:not(:disabled) { background: var(--surface2); color: var(--text); }
+
+  /* Feedback screen */
+  #feedback-screen { display: none; flex-direction: column; gap: 24px; }
+
+  .feedback-header { display: flex; justify-content: space-between; align-items: center; }
+  .feedback-header h2 { font-size: 1.1rem; font-weight: 600; }
+
+  .feedback-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .feedback-card strong { color: var(--text); font-weight: 600; }
+
+  /* Loading */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 0.875rem;
+    padding: 12px 0;
+  }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Bold in streamed content */
+  b { font-weight: 600; color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>PM Interview Coach</h1>
+    <p>Practice with an AI interviewer. Get honest feedback.</p>
+  </div>
+
+  <!-- Start screen -->
+  <div id="start-screen">
+    <div class="type-card" onclick="startInterview('product-sense')">
+      <span class="badge badge-ps">Product Sense</span>
+      <h2>Product Sense</h2>
+      <p>Design thinking, user empathy, problem framing. Classic open-ended product questions like "Design X for Y" or "Improve this product."</p>
+    </div>
+    <div class="type-card" onclick="startInterview('prioritization')">
+      <span class="badge badge-pr">Prioritization</span>
+      <h2>Prioritization</h2>
+      <p>Trade-off reasoning, frameworks, stakeholder alignment. Expect scenarios involving competing features, limited resources, and hard calls.</p>
+    </div>
+    <div class="type-card" onclick="startInterview('estimation')">
+      <span class="badge badge-es">Estimation</span>
+      <h2>Estimation</h2>
+      <p>Market sizing, back-of-envelope math, structured decomposition. Tests your ability to reason from first principles under ambiguity.</p>
+    </div>
+  </div>
+
+  <!-- Interview screen -->
+  <div id="interview-screen">
+    <div class="interview-header">
+      <h2 id="interview-type-label"></h2>
+      <span class="round-indicator" id="round-label">Round 1 of 3</span>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="answer-area" id="answer-area">
+      <textarea id="answer-input" placeholder="Type your answer here..."></textarea>
+      <div class="btn-row">
+        <span class="hint">Ctrl+Enter to submit</span>
+        <button id="submit-btn" onclick="submitAnswer()">Answer</button>
+      </div>
+    </div>
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <span id="loading-text">Thinking...</span>
+    </div>
+  </div>
+
+  <!-- Feedback screen -->
+  <div id="feedback-screen">
+    <div class="feedback-header">
+      <h2>Interview Feedback</h2>
+      <button class="btn-secondary" onclick="reset()">Start Over</button>
+    </div>
+    <div class="feedback-card" id="feedback-content"></div>
+  </div>
+</div>
+
+<script>
+const CONFIG = { WORKER_URL: "http://localhost:8787" }
+
+const TYPE_LABELS = {
+  "product-sense": "Product Sense",
+  "prioritization": "Prioritization",
+  "estimation": "Estimation"
+}
+
+let state = {
+  interviewType: null,
+  round: 0,
+  messages: [],
+  streaming: false
+}
+
+function startInterview(type) {
+  state = { interviewType: type, round: 0, messages: [], streaming: false }
+  document.getElementById("start-screen").style.display = "none"
+  const screen = document.getElementById("interview-screen")
+  screen.style.display = "flex"
+  document.getElementById("interview-type-label").textContent = TYPE_LABELS[type]
+  document.getElementById("messages").innerHTML = ""
+  document.getElementById("answer-input").value = ""
+  requestQuestion()
+}
+
+async function requestQuestion() {
+  state.round = 1
+  updateRoundLabel()
+  showLoading("Preparing your question...")
+  const bubble = addInterviewerBubble()
+  await streamChat("question", [], bubble)
+  hideLoading()
+  enableInput()
+}
+
+async function submitAnswer() {
+  if (state.streaming) return
+  const input = document.getElementById("answer-input")
+  const answer = input.value.trim()
+  if (!answer) return
+
+  input.value = ""
+  disableInput()
+
+  const lastInterviewerMsg = state.messages.length > 0
+    ? state.messages[state.messages.length - 1]
+    : null
+
+  state.messages.push({ role: "user", content: answer })
+  addUserBubble(answer)
+
+  if (state.round >= 3) {
+    await getFeedback()
+    return
+  }
+
+  state.round++
+  updateRoundLabel()
+  showLoading("Reviewing your answer...")
+  const bubble = addInterviewerBubble()
+  await streamChat("followup", state.messages, bubble)
+  hideLoading()
+
+  if (state.round >= 3) {
+    document.getElementById("submit-btn").textContent = "Get Feedback"
+  }
+  enableInput()
+}
+
+async function getFeedback() {
+  document.getElementById("interview-screen").style.display = "none"
+  const feedbackScreen = document.getElementById("feedback-screen")
+  feedbackScreen.style.display = "flex"
+
+  const content = document.getElementById("feedback-content")
+  content.innerHTML = '<div class="loading"><div class="spinner"></div><span>Generating feedback...</span></div>'
+
+  let feedbackText = ""
+  const tempBubble = { innerHTML: "" }
+
+  await streamChat("feedback", state.messages, {
+    set innerHTML(val) {
+      feedbackText = val
+      content.innerHTML = renderMarkdown(val)
+    },
+    get innerHTML() { return feedbackText }
+  })
+}
+
+async function streamChat(phase, messages, bubble) {
+  state.streaming = true
+  let accumulated = ""
+
+  try {
+    const res = await fetch(`${CONFIG.WORKER_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phase, interviewType: state.interviewType, messages })
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }))
+      bubble.innerHTML = `<span style="color:var(--red)">Error: ${err.error || res.statusText}</span>`
+      state.streaming = false
+      return
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split("\n")
+      buffer = lines.pop()
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue
+        const data = line.slice(6).trim()
+        if (data === "[DONE]") continue
+        try {
+          const evt = JSON.parse(data)
+          if (evt.type === "content_block_delta" && evt.delta?.text) {
+            accumulated += evt.delta.text
+            bubble.innerHTML = renderMarkdown(accumulated) + '<span class="streaming-cursor"></span>'
+            bubble.scrollIntoView({ block: "nearest" })
+          }
+        } catch {}
+      }
+    }
+
+    bubble.innerHTML = renderMarkdown(accumulated)
+
+    if (phase !== "feedback") {
+      state.messages.push({ role: "assistant", content: accumulated })
+    }
+  } catch (e) {
+    bubble.innerHTML = `<span style="color:var(--red)">Connection error: ${e.message}</span>`
+  }
+
+  state.streaming = false
+}
+
+function addInterviewerBubble() {
+  const msgs = document.getElementById("messages")
+  const wrap = document.createElement("div")
+  wrap.className = "msg msg-interviewer"
+  wrap.innerHTML = '<div class="msg-label">Interviewer</div>'
+  const bubble = document.createElement("div")
+  bubble.className = "msg-bubble"
+  wrap.appendChild(bubble)
+  msgs.appendChild(wrap)
+  bubble.scrollIntoView({ block: "nearest" })
+  return bubble
+}
+
+function addUserBubble(text) {
+  const msgs = document.getElementById("messages")
+  const wrap = document.createElement("div")
+  wrap.className = "msg msg-user"
+  wrap.innerHTML = `<div class="msg-label">You</div><div class="msg-bubble">${escapeHtml(text)}</div>`
+  msgs.appendChild(wrap)
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/\n/g, "<br>")
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+function updateRoundLabel() {
+  document.getElementById("round-label").textContent = `Round ${state.round} of 3`
+}
+
+function showLoading(text) {
+  document.getElementById("loading-text").textContent = text
+  document.getElementById("loading").style.display = "flex"
+}
+
+function hideLoading() {
+  document.getElementById("loading").style.display = "none"
+}
+
+function enableInput() {
+  document.getElementById("answer-input").disabled = false
+  document.getElementById("answer-input").focus()
+  document.getElementById("submit-btn").disabled = false
+}
+
+function disableInput() {
+  document.getElementById("answer-input").disabled = true
+  document.getElementById("submit-btn").disabled = true
+}
+
+function reset() {
+  state = { interviewType: null, round: 0, messages: [], streaming: false }
+  document.getElementById("feedback-screen").style.display = "none"
+  document.getElementById("interview-screen").style.display = "none"
+  document.getElementById("start-screen").style.display = "flex"
+  document.getElementById("submit-btn").textContent = "Answer"
+}
+
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.key === "Enter") {
+    if (document.getElementById("interview-screen").style.display !== "none") {
+      submitAnswer()
+    }
+  }
+})
+</script>
+</body>
+</html>
