@@ -127,7 +127,7 @@ claude-playground/
 - Worker deployed at: `https://scrum-agents-worker.claude-playground.workers.dev`
 - Worker deployment: see `scrum-agents/worker/` — uses Wrangler CLI
   - `wrangler secret put ANTHROPIC_API_KEY` — stores the key securely
-  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — locked to `https://matgitrepo.github.io`
   - Rate limiting: 100 requests/day via shared `RATE_LIMIT` KV namespace (ID: `e60c23241f63496093286049ef0896de`)
 - Ctrl+Enter starts the sprint
 
