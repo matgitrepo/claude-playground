@@ -137,9 +137,10 @@ claude-playground/
 - Claude responses stream via SSE; full message history sent each turn for context
 - Model: `claude-sonnet-4-6` — single `/chat` endpoint, `phase` param controls prompt (question / followup / feedback)
 - `CONFIG.WORKER_URL` in `index.html` — points to deployed Cloudflare Worker
+- Worker deployed at: `https://pm-interview-coach-worker.claude-playground.workers.dev`
 - Worker deployment: see `pm-interview-coach/worker/` — uses Wrangler CLI
   - `wrangler secret put ANTHROPIC_API_KEY` — stores the key securely
-  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — locked to `https://matgitrepo.github.io`
 - Ctrl+Enter submits answers
 
 ### Project: Assumption Mapper (`assumption-mapper/index.html`)
@@ -149,9 +150,10 @@ claude-playground/
 - Below the grid: assumption cards grouped by category, color-coded (blue/amber/rose); clicking dot↔card cross-highlights
 - Model: `claude-sonnet-4-6` — single `/analyze` endpoint, returns JSON (non-streaming)
 - `CONFIG.WORKER_URL` in `index.html` — points to deployed Cloudflare Worker
+- Worker deployed at: `https://assumption-mapper-worker.claude-playground.workers.dev`
 - Worker deployment: see `assumption-mapper/worker/` — uses Wrangler CLI
   - `wrangler secret put ANTHROPIC_API_KEY` — stores the key securely
-  - `ALLOWED_ORIGIN` in `wrangler.toml` — currently `"null"` (local only)
+  - `ALLOWED_ORIGIN` in `wrangler.toml` — locked to `https://matgitrepo.github.io`
 - Ctrl+Enter submits the feature idea
 
 ### Running
