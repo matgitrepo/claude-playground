@@ -244,6 +244,28 @@
     color: var(--muted);
   }
 
+  /* ── SECTION HEADER ── */
+  .section-header {
+    margin: 64px 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-header h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    white-space: nowrap;
+  }
+  .section-header .line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, currentColor, transparent);
+    opacity: 0.3;
+  }
+  .section-pm { color: var(--cyan); }
+  .section-other { color: var(--magenta); }
+
   /* ── FOOTER ── */
   .footer {
     margin-top: 96px;
@@ -284,7 +306,17 @@
     <p class="tagline">AI-powered product tools — built to explore what's possible</p>
   </div>
 
-  <div class="app-grid" id="app-grid"></div>
+  <div class="section-header section-pm">
+    <h2>// PM TOOLS</h2>
+    <div class="line"></div>
+  </div>
+  <div class="app-grid" id="pm-grid"></div>
+
+  <div class="section-header section-other">
+    <h2>// OTHER PROJECTS</h2>
+    <div class="line"></div>
+  </div>
+  <div class="app-grid" id="other-grid"></div>
 
   <div class="footer">
     <div>© 2025 MAT BOCIEK — PM + AI BUILDER<span class="cursor"></span></div>
@@ -356,7 +388,7 @@ function drawGrid() {
 drawGrid()
 
 // ── APP DATA ──
-const apps = [
+const pmApps = [
   {
     id: '01', icon: '🎤',
     title: 'PM INTERVIEW\nCOACH',
@@ -388,7 +420,10 @@ const apps = [
     desc: 'Live skills tracker for London product jobs. Scans PM/PO/Head of Product listings daily via SerpAPI and surfaces what\'s trending.',
     color: '#00ff41', status: true,
     url: 'market-intel/'
-  },
+  }
+]
+
+const otherApps = [
   {
     id: '05', icon: '🥾',
     title: 'HIKING\nPLANNER',
@@ -398,77 +433,65 @@ const apps = [
     url: 'hiking-planner/'
   },
   {
-    id: '06', icon: '👗',
-    title: 'DEAL\nHUNTER',
-    genre: 'ADVENTURE  ·  FASHION',
-    desc: 'Scours Zalando, ASOS and Vinted in parallel. Filters by size, converts currencies, sorts by total price. New and secondhand.',
-    color: '#ff8800', status: true,
-    url: 'shopping-agent/'
-  },
-  {
-    id: '07', icon: '🎙️',
+    id: '06', icon: '🎙️',
     title: 'PODCAST\nGENERATOR',
     genre: 'CREATIVE  ·  AUDIO',
-    desc: 'Enter a topic. Two AI hosts debate it, voice it with ElevenLabs, and hand you a WAV file. Coming to the web soon.',
-    color: '#ff2255', status: false,
+    desc: 'Enter a topic. Two AI hosts debate it, voice it with ElevenLabs, and hand you a downloadable WAV file.',
+    color: '#ff8800', status: false,
     url: null
-  },
-  {
-    id: '08', icon: '✖️',
-    title: 'TIC TAC\nTOE',
-    genre: 'CLASSIC  ·  ARCADE',
-    desc: 'Two-player, dark-themed, with score tracking and win highlighting. The game that started this whole playground.',
-    color: '#ffff00', status: true,
-    url: 'tic-tac-toe/'
   }
 ]
 
 // ── RENDER ──
-const grid = document.getElementById('app-grid')
-
-apps.forEach(app => {
-  const el = document.createElement(app.status ? 'a' : 'div')
-  if (app.status && app.url) el.href = app.url
-  el.className = `card ${app.status ? 'live' : 'offline'}`
-  el.style.borderColor = app.status ? app.color + '55' : '#1a1a2e'
-  if (app.status) {
-    el.style.boxShadow = `0 0 18px ${app.color}18, inset 0 0 24px ${app.color}06`
-  }
-
-  el.innerHTML = `
-    <div class="card-top">
-      <div class="card-icon">${app.icon}</div>
-      <div class="status ${app.status ? 'on' : 'off'}">${app.status ? '● ONLINE' : '○ OFFLINE'}</div>
-    </div>
-    <div class="card-body">
-      <div class="genre" style="color:${app.color}">${app.genre}</div>
-      <div class="card-title" style="color:${app.color};text-shadow:0 0 14px ${app.color}66">
-        ${app.title.replace('\n', '<br>')}
-      </div>
-      <div class="card-desc">${app.desc}</div>
-      <div class="card-footer">
-        ${app.status
-          ? `<a href="${app.url}" class="play-btn live" style="color:${app.color};border-color:${app.color};text-shadow:0 0 8px ${app.color}88">▶ PLAY</a>`
-          : `<span class="play-btn locked">✕ LOCKED</span>`
-        }
-        <span class="card-num">${app.id}</span>
-      </div>
-    </div>
-  `
-
-  if (app.status) {
-    el.addEventListener('mouseenter', () => {
-      el.style.borderColor = app.color + 'aa'
-      el.style.boxShadow = `0 0 40px ${app.color}33, 0 10px 40px ${app.color}18, inset 0 0 30px ${app.color}0a`
-    })
-    el.addEventListener('mouseleave', () => {
-      el.style.borderColor = app.color + '55'
+function renderCards(apps, gridId) {
+  const grid = document.getElementById(gridId)
+  apps.forEach(app => {
+    const el = document.createElement(app.status && app.url ? 'a' : 'div')
+    if (app.status && app.url) el.href = app.url
+    el.className = `card ${app.status ? 'live' : 'offline'}`
+    el.style.borderColor = app.status ? app.color + '55' : '#1a1a2e'
+    if (app.status) {
       el.style.boxShadow = `0 0 18px ${app.color}18, inset 0 0 24px ${app.color}06`
-    })
-  }
+    }
 
-  grid.appendChild(el)
-})
+    el.innerHTML = `
+      <div class="card-top">
+        <div class="card-icon">${app.icon}</div>
+        <div class="status ${app.status ? 'on' : 'off'}">${app.status ? '● ONLINE' : '○ OFFLINE'}</div>
+      </div>
+      <div class="card-body">
+        <div class="genre" style="color:${app.color}">${app.genre}</div>
+        <div class="card-title" style="color:${app.color};text-shadow:0 0 14px ${app.color}66">
+          ${app.title.replace('\n', '<br>')}
+        </div>
+        <div class="card-desc">${app.desc}</div>
+        <div class="card-footer">
+          ${app.status && app.url
+            ? `<a href="${app.url}" class="play-btn live" style="color:${app.color};border-color:${app.color};text-shadow:0 0 8px ${app.color}88">▶ PLAY</a>`
+            : `<span class="play-btn locked">✕ LOCKED</span>`
+          }
+          <span class="card-num">${app.id}</span>
+        </div>
+      </div>
+    `
+
+    if (app.status) {
+      el.addEventListener('mouseenter', () => {
+        el.style.borderColor = app.color + 'aa'
+        el.style.boxShadow = `0 0 40px ${app.color}33, 0 10px 40px ${app.color}18, inset 0 0 30px ${app.color}0a`
+      })
+      el.addEventListener('mouseleave', () => {
+        el.style.borderColor = app.color + '55'
+        el.style.boxShadow = `0 0 18px ${app.color}18, inset 0 0 24px ${app.color}06`
+      })
+    }
+
+    grid.appendChild(el)
+  })
+}
+
+renderCards(pmApps, 'pm-grid')
+renderCards(otherApps, 'other-grid')
 </script>
 </body>
 </html>
