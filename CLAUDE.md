@@ -14,6 +14,7 @@ Monorepo — each project lives in its own subfolder. New projects should get th
 
 ```
 claude-playground/
+├── index.html          ← arcade-style portfolio landing page
 ├── tic-tac-toe/
 │   └── index.html
 ├── shopping-agent/
