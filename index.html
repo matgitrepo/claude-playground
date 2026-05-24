@@ -358,6 +358,121 @@
   @media (max-width: 520px) {
     .intro { flex-direction: column; align-items: flex-start; }
   }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(8,8,18,0.88);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: #0a0a16;
+    border: 1px solid;
+    border-radius: 4px;
+    max-width: 580px;
+    width: 100%;
+    padding: 32px;
+    position: relative;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+  .modal-backdrop.open .modal {
+    transform: translateY(0);
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    padding: 6px 10px;
+    border: 1px solid;
+    transition: opacity 0.15s;
+  }
+  .modal-close:hover { opacity: 0.7; }
+  .modal-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .modal-icon { font-size: 1.8rem; line-height: 1; }
+  .modal-meta { display: flex; flex-direction: column; gap: 6px; }
+  .modal-genre {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.38rem;
+    letter-spacing: 0.12em;
+    opacity: 0.7;
+  }
+  .modal-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    line-height: 1.6;
+  }
+  .modal-divider { height: 1px; background: #1e2240; margin-bottom: 20px; }
+  .modal-section-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.38rem;
+    letter-spacing: 0.14em;
+    opacity: 0.5;
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+  .modal-section-label:first-of-type { margin-top: 0; }
+  .modal-body p {
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: #7a82a8;
+  }
+  .modal-body p + p { margin-top: 8px; }
+  .modal-body strong { color: #dde4ff; font-weight: 600; }
+  .modal-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .modal-tech span {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border: 1px solid #1e2240;
+    border-radius: 2px;
+    color: #5a6280;
+    background: rgba(255,255,255,0.02);
+  }
+  .modal-footer {
+    margin-top: 28px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .modal-launch {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.52rem;
+    padding: 12px 22px;
+    border: 2px solid;
+    background: transparent;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    display: inline-block;
+    transition: filter 0.15s;
+  }
+  .modal-launch:hover { filter: brightness(1.25); }
 </style>
 </head>
 <body>
@@ -365,6 +480,24 @@
 <canvas id="grid-canvas"></canvas>
 <div class="scanlines"></div>
 <div class="vignette"></div>
+
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modal-close" onclick="closeModal()">✕ CLOSE</button>
+    <div class="modal-top">
+      <div class="modal-icon" id="modal-icon"></div>
+      <div class="modal-meta">
+        <div class="modal-genre" id="modal-genre"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <a class="modal-launch" id="modal-launch">▶ LAUNCH APP</a>
+    </div>
+  </div>
+</div>
 
 <div class="content">
 
@@ -477,7 +610,11 @@ const pmApps = [
     genre: 'RPG  ·  CAREER',
     desc: 'Go up against a senior PM interviewer. Three rounds of sharp follow-ups, then unfiltered feedback on what landed and what didn\'t.',
     color: '#00f0ff', status: true,
-    url: 'pm-interview-coach/'
+    url: 'pm-interview-coach/',
+    problem: 'Getting honest feedback on PM interview answers is genuinely hard. Friends are too polite, and generic AI advice doesn\'t reflect what you actually said.',
+    detail: 'Claude plays a senior PM interviewer across three question types — product sense, prioritisation, and estimation. It asks an opening question, follows up twice based on your specific answer, then gives structured feedback: <strong>what landed, what was weak, and what a strong answer looks like.</strong>',
+    challenge: 'The key challenge was conversation state. Each turn sends the full message history to Claude so follow-up questions are genuinely contextual — not canned. A Cloudflare Worker handles phase logic and proxies the Claude API with streaming, so responses appear token by token. The API key never touches the frontend.',
+    tech: ['Claude API', 'Streaming SSE', 'Cloudflare Workers', 'Multi-turn state management']
   },
   {
     id: '02', icon: '🗺️',
@@ -485,7 +622,11 @@ const pmApps = [
     genre: 'PUZZLE  ·  STRATEGY',
     desc: 'Describe a feature. Claude surfaces your riskiest bets and plots them on a live 2×2 risk map — before you waste a sprint.',
     color: '#bf00ff', status: true,
-    url: 'assumption-mapper/'
+    url: 'assumption-mapper/',
+    problem: 'Most teams build first and discover wrong assumptions later — in the form of failed launches. Assumption mapping is a known framework, but doing it properly takes hours.',
+    detail: 'Describe any feature idea and Claude identifies your riskiest bets across desirability, feasibility, and viability. Each assumption is plotted on an <strong>interactive 2×2 risk map</strong> — confidence vs. impact if wrong — with a suggested lean experiment to validate it.',
+    challenge: 'Getting Claude to return structured, machine-readable output reliably. The system prompt instructs it to return only valid JSON — the Worker parses and validates that before it hits the frontend. The 2×2 grid is pure CSS positioning driven by the confidence and impact scores — entirely data-driven.',
+    tech: ['Claude API', 'Structured JSON output', 'CSS data-driven visualisation', 'Cloudflare Workers']
   },
   {
     id: '03', icon: '⚔️',
@@ -493,7 +634,11 @@ const pmApps = [
     genre: 'MULTIPLAYER  ·  PLANNING',
     desc: 'Three AI agents — BA, Dev, QA — tear your feature apart. Interject between rounds. Walk away with a real plan.',
     color: '#ff00bf', status: true,
-    url: 'scrum-agents/'
+    url: 'scrum-agents/',
+    problem: 'Feature planning sessions are where good ideas go to die — specs too vague, engineering not consulted early enough, QA finding gaps after the sprint starts.',
+    detail: 'Three Claude personas — a BA, a Senior Dev, and a QA engineer — review your feature idea from their own angle, in sequence. You can interject between rounds. At the end, a <strong>Scrum Master agent synthesises everything into a plan of action.</strong>',
+    challenge: 'Making agents that build on each other without losing context. Each agent receives the full conversation history — so the Dev can push back on the BA\'s spec and QA can challenge the implementation. Responses stream via SSE with no buffering. The Worker handles rate limiting via Cloudflare KV.',
+    tech: ['Claude API', 'Multi-agent architecture', 'Streaming SSE', 'Cloudflare Workers + KV']
   },
   {
     id: '04', icon: '📊',
@@ -501,7 +646,11 @@ const pmApps = [
     genre: 'STRATEGY  ·  DATA',
     desc: 'Live skills tracker for London product jobs. Scans PM/PO/Head of Product listings daily via SerpAPI and surfaces what\'s trending.',
     color: '#00ff41', status: true,
-    url: 'market-intel/'
+    url: 'market-intel/',
+    problem: 'Generic advice about which PM skills to develop is everywhere. What\'s harder to find is data — what skills are London employers actually hiring for right now, and is that changing?',
+    detail: 'A live dashboard tracking the top trending skills in London product job listings, updated daily. Shows whether each skill is <strong>rising or falling over the past 30 days</strong> compared to the previous 30.',
+    challenge: 'A GitHub Actions cron job fires at 2am UTC, calls SerpAPI to pull Google Jobs listings, then runs each description through a keyword extractor using word-boundary regex. Counts land in Cloudflare D1. Word boundaries were critical — naive matching would confuse "SQL" with "NoSQL" or flag "R" inside every other word.',
+    tech: ['SerpAPI', 'GitHub Actions cron', 'Cloudflare D1', 'Cloudflare Workers', 'Regex keyword extraction']
   }
 ]
 
@@ -512,7 +661,11 @@ const otherApps = [
     genre: 'SIMULATION  ·  OUTDOOR',
     desc: 'Enter a city. Get an AI-evaluated hiking verdict for tomorrow or the weekend, plus nearby trails pulled from OpenStreetMap.',
     color: '#80ff00', status: true,
-    url: 'hiking-planner/'
+    url: 'hiking-planner/',
+    problem: 'An exercise in chaining multiple external APIs into a coherent UX — and making sure a slow API doesn\'t block a fast one.',
+    detail: 'Enter any city and get an <strong>AI-evaluated hiking verdict</strong> for tomorrow or the weekend — great, so-so, or stay home — plus nearby trails pulled from OpenStreetMap.',
+    challenge: 'Nominatim geocodes the city, Open-Meteo pulls the weather forecast, and Overpass API queries OpenStreetMap for trails — all fired in parallel. The trail results render asynchronously so the verdict appears immediately while trails load in the background. The Cloudflare Worker keeps the OpenAI key off the frontend.',
+    tech: ['Open-Meteo', 'Nominatim', 'Overpass API', 'GPT-4o-mini', 'Parallel async fetching', 'Cloudflare Workers']
   },
   {
     id: '06', icon: '🎙️',
@@ -520,16 +673,72 @@ const otherApps = [
     genre: 'CREATIVE  ·  AUDIO',
     desc: 'Enter a topic. Two AI hosts debate it, voice it with ElevenLabs, and hand you a downloadable WAV file.',
     color: '#ff8800', status: false,
-    url: null
+    url: null,
+    problem: 'Could the whole pipeline — script generation, voice synthesis, and audio assembly — run without any server-side audio processing?',
+    detail: 'Enter a topic. GPT-4o writes a two-host dialogue script, ElevenLabs voices each line, and the browser stitches it into a <strong>downloadable WAV file</strong> — entirely client-side.',
+    challenge: 'Browser-side audio assembly. Each ElevenLabs response is an MP3 blob decoded via the Web Audio API, concatenated in dialogue order, then encoded as WAV. The challenge: API calls run in parallel for speed, but audio must be stitched in dialogue order — not arrival order.',
+    tech: ['GPT-4o', 'ElevenLabs TTS', 'Web Audio API', 'Browser-side WAV assembly', 'Cloudflare Workers']
   }
 ]
+
+// ── MODAL ──
+function openModal(app) {
+  const backdrop = document.getElementById('modal-backdrop')
+  const modal = document.getElementById('modal')
+
+  document.getElementById('modal-icon').textContent = app.icon
+  document.getElementById('modal-genre').textContent = app.genre
+  document.getElementById('modal-genre').style.color = app.color
+  document.getElementById('modal-title').textContent = app.title.replace('\n', ' ')
+  document.getElementById('modal-title').style.color = app.color
+  document.getElementById('modal-title').style.textShadow = `0 0 12px ${app.color}88`
+
+  modal.style.borderColor = app.color + '66'
+  modal.style.boxShadow = `0 0 40px ${app.color}22`
+
+  const closeBtn = document.getElementById('modal-close')
+  closeBtn.style.color = app.color
+  closeBtn.style.borderColor = app.color + '66'
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section-label">// THE PROBLEM</div>
+    <p>${app.problem}</p>
+    <div class="modal-section-label">// WHAT IT DOES</div>
+    <p>${app.detail}</p>
+    <div class="modal-section-label">// DESIGN CHALLENGE</div>
+    <p>${app.challenge}</p>
+    <div class="modal-section-label">// TECH STACK</div>
+    <div class="modal-tech">${app.tech.map(t => `<span>${t}</span>`).join('')}</div>
+  `
+
+  const launch = document.getElementById('modal-launch')
+  if (app.url) {
+    launch.href = app.url
+    launch.style.color = app.color
+    launch.style.borderColor = app.color
+    launch.style.textShadow = `0 0 10px ${app.color}88`
+    launch.style.display = 'inline-block'
+  } else {
+    launch.style.display = 'none'
+  }
+
+  backdrop.classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-backdrop')) return
+  document.getElementById('modal-backdrop').classList.remove('open')
+  document.body.style.overflow = ''
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal() })
 
 // ── RENDER ──
 function renderCards(apps, gridId) {
   const grid = document.getElementById(gridId)
   apps.forEach(app => {
-    const el = document.createElement(app.status && app.url ? 'a' : 'div')
-    if (app.status && app.url) el.href = app.url
+    const el = document.createElement('div')
     el.className = `card ${app.status ? 'live' : 'offline'}`
     el.style.borderColor = app.status ? app.color + '55' : '#1a1a2e'
     if (app.status) {
@@ -548,8 +757,8 @@ function renderCards(apps, gridId) {
         </div>
         <div class="card-desc">${app.desc}</div>
         <div class="card-footer">
-          ${app.status && app.url
-            ? `<a href="${app.url}" class="play-btn live" style="color:${app.color};border-color:${app.color};text-shadow:0 0 8px ${app.color}88">▶ PLAY</a>`
+          ${app.status
+            ? `<button class="play-btn live" style="color:${app.color};border-color:${app.color};text-shadow:0 0 8px ${app.color}88">▶ PLAY</button>`
             : `<span class="play-btn locked">✕ LOCKED</span>`
           }
           <span class="card-num">${app.id}</span>
@@ -566,6 +775,12 @@ function renderCards(apps, gridId) {
         el.style.borderColor = app.color + '55'
         el.style.boxShadow = `0 0 18px ${app.color}18, inset 0 0 24px ${app.color}06`
       })
+      el.querySelector('.play-btn')?.addEventListener('click', e => {
+        e.stopPropagation()
+        openModal(app)
+      })
+      el.style.cursor = 'pointer'
+      el.addEventListener('click', () => openModal(app))
     }
 
     grid.appendChild(el)
