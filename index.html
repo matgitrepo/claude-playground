@@ -481,9 +481,9 @@
 <div class="scanlines"></div>
 <div class="vignette"></div>
 
-<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+<div class="modal-backdrop" id="modal-backdrop">
   <div class="modal" id="modal">
-    <button class="modal-close" id="modal-close" onclick="closeModal()">✕ CLOSE</button>
+    <button class="modal-close" id="modal-close">✕ CLOSE</button>
     <div class="modal-top">
       <div class="modal-icon" id="modal-icon"></div>
       <div class="modal-meta">
@@ -713,25 +713,29 @@ function openModal(app) {
 
   const launch = document.getElementById('modal-launch')
   if (app.url) {
-    launch.href = app.url
     launch.style.color = app.color
     launch.style.borderColor = app.color
     launch.style.textShadow = `0 0 10px ${app.color}88`
     launch.style.display = 'inline-block'
+    launch.onclick = () => { window.location.href = app.url }
   } else {
     launch.style.display = 'none'
+    launch.onclick = null
   }
 
   backdrop.classList.add('open')
   document.body.style.overflow = 'hidden'
 }
 
-function closeModal(e) {
-  if (e && e.target !== document.getElementById('modal-backdrop')) return
+function closeModal() {
   document.getElementById('modal-backdrop').classList.remove('open')
   document.body.style.overflow = ''
 }
 
+document.getElementById('modal-backdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal()
+})
+document.getElementById('modal-close').addEventListener('click', closeModal)
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal() })
 
 // ── RENDER ──
